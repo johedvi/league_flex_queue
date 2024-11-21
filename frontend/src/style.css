@@ -1,0 +1,114 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f9f9f9;
+}
+h1, h2, h3 {
+    color: #333;
+    text-align: center;
+}
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+li {
+    margin: 5px 0;
+}
+.error {
+    color: red;
+}
+.container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: nowrap; /* Prevent wrapping to keep sections side by side */
+}
+.queue, .search, .wheel-section {
+    width: 32%; /* Adjusted to fit three sections side by side with some margin */
+    min-width: 280px; /* Ensure minimum width for smaller screens */
+    margin: 10px;
+    background-color: #fff;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+.wheel-container {
+    position: relative;
+    width: 200px; /* Reduced width */
+    height: 200px; /* Reduced height */
+    margin: 0 auto;
+}
+/* Arrow Styling - rotated 180 degrees to point downward */
+.arrow {
+    position: absolute;
+    top: -15px; /* Keep the arrow at the top */
+    left: 50%;
+    transform: translateX(-50%) rotate(180deg); /* Rotate 180 degrees to point downward */
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 30px solid #ff0000; /* Original arrow pointing downward */
+    z-index: 10;
+}
+canvas {
+    border-radius: 50%;
+    background-color: #fff;
+    display: block; /* Remove inline space */
+}
+button {
+    margin-top: 10px;
+    padding: 8px 16px; /* Reduced padding for smaller buttons */
+    font-size: 14px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+button:hover {
+    background-color: #45a049;
+}
+#nameInput {
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+}
+#nameInput input {
+    flex: 1;
+    padding: 8px;
+    font-size: 14px;
+}
+#nameList {
+    margin-top: 20px;
+    font-size: 14px;
+}
+#result {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+}
+/* Responsive Adjustments */
+@media (max-width: 1000px) {
+    .container {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .queue, .search, .wheel-section {
+        width: 90%;
+        max-width: 400px;
+    }
+    .wheel-container {
+        width: 150px;
+        height: 150px;
+    }
+    .arrow {
+        top: -10px; /* Adjusted position for smaller wheel */
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-bottom: 20px solid #ff0000; /* Adjusted size */
+    }
+}
