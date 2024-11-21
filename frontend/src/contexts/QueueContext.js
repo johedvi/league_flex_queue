@@ -8,7 +8,7 @@ import { io } from 'socket.io-client';
 export const QueueContext = createContext();
 
 // Get backend URL from environment variables
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.PORT || 'http://localhost:5000';
 
 // Initialize Socket.IO client outside the component to ensure a single instance
 const socket = io(BACKEND_URL, {
