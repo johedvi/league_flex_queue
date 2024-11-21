@@ -1,6 +1,7 @@
 // frontend/src/contexts/QueueContext.js
 
 import React, { createContext, useState, useEffect } from 'react';
+import axios from 'axios';
 import { io } from 'socket.io-client';
 
 // Create the QueueContext
