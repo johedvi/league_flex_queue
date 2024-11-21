@@ -7,8 +7,11 @@ import { io } from 'socket.io-client';
 // Create the QueueContext
 export const QueueContext = createContext();
 
+// Get backend URL from environment variables
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
 // Initialize Socket.IO client outside the component to ensure a single instance
-const socket = io('http://localhost:5000', {
+const socket = io(BACKEND_URL, {
   transports: ['websocket'], // Force WebSocket transport
   reconnectionAttempts: 5,   // Number of reconnection attempts
   timeout: 10000,            // Connection timeout in milliseconds
@@ -24,7 +27,7 @@ export const QueueProvider = ({ children }) => {
   const fetchQueue = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/queue');
+      const response = await axios.get(`${BACKEND_URL}/api/queue`);
       setQueue(response.data.queue);
       setLoading(false);
     } catch (err) {
@@ -70,8 +73,20 @@ export const QueueProvider = ({ children }) => {
     };
   }, []); // Empty dependency array ensures this runs once on mount
 
+  // Function to add a player to the queue
+  const addPlayer = async (playerName) => {
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/queue`, { player_name: playerName });
+      console.log('Add Player Response:', response.data);
+      // The queue will update automatically via WebSocket
+    } catch (err) {
+      console.error('Error adding player to queue:', err);
+      throw err.response?.data?.error || new Error('Failed to add player to queue.');
+    }
+  };
+
   return (
-    <QueueContext.Provider value={{ queue, setQueue, fetchQueue, loading, error }}>
+    <QueueContext.Provider value={{ queue, setQueue, fetchQueue, addPlayer, loading, error }}>
       {children}
     </QueueContext.Provider>
   );

@@ -1,5 +1,6 @@
 # backend/app.py
 
+import os
 import eventlet
 eventlet.monkey_patch()
 
@@ -20,7 +21,8 @@ app = Flask(__name__)
 app.config.from_object(settings.Config)
 
 # Initialize extensions
-CORS(app, origins={r"/*":{"origins":"*"}})  # Specify allowed origins
+# Allow all origins for CORS (modify as needed for security)
+CORS(app, origins="*")  
 db.init_app(app)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
@@ -175,8 +177,11 @@ def delete_player(player_id):
 def handle_connect():
     logging.info("A client has connected.")
 
-
+@socketio.on('disconnect')
+def handle_disconnect():
+    logging.info("A client has disconnected.")
 
 if __name__ == '__main__':
-    # Run with Eventlet
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    # Fetch PORT from environment variables, default to 5000 for development
+    port = int(os.environ.get('PORT', 5000))
+    socketio.run(app, host='0.0.0.0', port=port, debug=True)
