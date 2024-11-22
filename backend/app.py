@@ -27,7 +27,7 @@ app.config.from_object(settings.Config)
 
 # Initialize extensions
 # Allow only your frontend's origin for CORS
-CORS(app, origins=["https://league-manager-react.onrender.com"])
+CORS(app)
 db.init_app(app)
 
 # Configure SocketIO with the allowed origins
