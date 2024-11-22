@@ -1,7 +1,7 @@
 # backend/app.py
 
-#import eventlet
-#eventlet.monkey_patch()
+import eventlet
+eventlet.monkey_patch()
 
 
 import os
