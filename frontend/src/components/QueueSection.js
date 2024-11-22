@@ -4,6 +4,7 @@ import React, { useContext, useState } from 'react';
 import { QueueContext } from '../contexts/QueueContext';
 import axios from 'axios';
 import './QueueSection.css'; // Optional: For styling purposes
+import { BACKEND_URL } from '../config'; // Import BACKEND_URL
 
 const QueueSection = () => {
   // Access queue state and functions from QueueContext
@@ -26,7 +27,7 @@ const QueueSection = () => {
     }
 
     try {
-      const response = await axios.post('/api/queue', { player_name: playerName.trim() });
+      const response = await axios.post(`${BACKEND_URL}/api/queue`, { player_name: playerName.trim() });
       console.log('Add Player Response:', response.data);
       setAddSuccess(response.data.message);
       setPlayerName(''); // Clear the input field

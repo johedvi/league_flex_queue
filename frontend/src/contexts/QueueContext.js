@@ -3,12 +3,10 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
+import { BACKEND_URL } from '../config'; // Import BACKEND_URL
 
 // Create the QueueContext
 export const QueueContext = createContext();
-
-// Backend URL
-const BACKEND_URL = 'https://blackultrasflex-backend.onrender.com';
 
 // Initialize Socket.IO client outside the component to ensure a single instance
 const socket = io(BACKEND_URL, {

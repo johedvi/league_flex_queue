@@ -4,6 +4,7 @@ import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { QueueContext } from '../contexts/QueueContext';
 import './SearchSection.css'; // Optional: For styling purposes
+import { BACKEND_URL } from '../config'; // Import BACKEND_URL
 
 const SearchSection = () => {
   const [summonerName, setSummonerName] = useState('');
@@ -28,7 +29,7 @@ const SearchSection = () => {
     }
 
     try {
-      const response = await axios.get('/api/search', {
+      const response = await axios.get(`${BACKEND_URL}/api/search`, {
         params: {
           summoner_name: summonerName.trim(),
           summoner_tagline: summonerTagline.trim(),
