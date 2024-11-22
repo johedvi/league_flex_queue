@@ -1,7 +1,7 @@
 # backend/app.py
 
-import eventlet
-eventlet.monkey_patch()
+#import eventlet
+#eventlet.monkey_patch()
 
 
 import os
@@ -24,16 +24,17 @@ load_dotenv()  # Loads environment variables from .env
 logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
+CORS(app)
 app.config.from_object(settings.Config)
 
 # Initialize extensions
 # Allow only your frontend's origin for CORS
-CORS(app)
+
 db.init_app(app)
 migrate = Migrate(app, db)  # Initialize Flask-Migrate
 
 # Configure SocketIO with the allowed origins
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins=["https://blackultras-flex.onrender.com"])
 
 # Import models after initializing db to prevent circular imports
 from models import Player
@@ -48,6 +49,12 @@ def add_cors_headers(response):
     response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
     return response
 
+@app.errorhandler(500)
+def internal_error(error):
+    logging.error(f"Internal server error: {error}")
+    response = jsonify({'error': 'Internal server error'})
+    response.status_code = 500
+    return response
 
 @app.route('/')
 def index():
