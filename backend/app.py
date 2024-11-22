@@ -29,10 +29,6 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 # Import models after initializing db to prevent circular imports
 from models import Player
 
-# Create database tables
-with app.app_context():
-    db.create_all()
-
 # In-memory queue for players (use a database or persistent storage in production)
 player_queue = []
 
