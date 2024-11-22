@@ -33,7 +33,7 @@ db = SQLAlchemy(app)  # Initialize SQLAlchemy with the app
 migrate = Migrate(app, db)  # Initialize Flask-Migrate
 
 # Configure SocketIO with the allowed origins
-socketio = SocketIO(app, cors_allowed_origins=["https://league-manager-react.onrender.com"], async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 # Import models after initializing db to prevent circular imports
 from models import Player
