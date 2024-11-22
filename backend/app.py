@@ -29,6 +29,7 @@ app.config.from_object(settings.Config)
 # Initialize extensions
 # Allow only your frontend's origin for CORS
 CORS(app)
+db.init_app(app)
 db = SQLAlchemy(app)  # Initialize SQLAlchemy with the app
 migrate = Migrate(app, db)  # Initialize Flask-Migrate
 
