@@ -25,10 +25,12 @@ app = Flask(__name__)
 app.config.from_object(settings.Config)
 
 # Initialize extensions
-# Allow all origins for CORS (modify as needed for security)
-CORS(app, origins="*")  
+# Allow only your frontend's origin for CORS
+CORS(app, origins=["https://league-manager-react.onrender.com"])
 db.init_app(app)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+
+# Configure SocketIO with the allowed origins
+socketio = SocketIO(app, cors_allowed_origins=["https://league-manager-react.onrender.com"], async_mode='eventlet')
 
 # Import models after initializing db to prevent circular imports
 from models import Player
@@ -181,7 +183,4 @@ def handle_connect():
 def handle_disconnect():
     logging.info("A client has disconnected.")
 
-if __name__ == '__main__':
-    # Fetch PORT from environment variables, default to 5000 for development
-    port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=True)
+# No need for the if __name__ == '__main__' block when using Gunicorn

@@ -7,12 +7,13 @@ import { io } from 'socket.io-client';
 // Create the QueueContext
 export const QueueContext = createContext();
 
-// Get backend URL from environment variables
-const BACKEND_URL = process.env.PORT || 'http://localhost:5000';
+// Backend URL
+const BACKEND_URL = 'https://blackultrasflex-backend.onrender.com';
 
 // Initialize Socket.IO client outside the component to ensure a single instance
 const socket = io(BACKEND_URL, {
   transports: ['websocket'], // Force WebSocket transport
+  secure: true,              // Ensure secure connection over HTTPS
   reconnectionAttempts: 5,   // Number of reconnection attempts
   timeout: 10000,            // Connection timeout in milliseconds
 });
