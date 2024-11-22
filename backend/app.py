@@ -9,6 +9,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
+from flask_migrate import Migrate  # Import Flask-Migrate
 import logging
 
 from riot_api import get_summoner_info, get_recent_match_id, get_team_members, calculate_scores
@@ -28,7 +29,8 @@ app.config.from_object(settings.Config)
 # Initialize extensions
 # Allow only your frontend's origin for CORS
 CORS(app)
-db.init_app(app)
+db = SQLAlchemy(app)  # Initialize SQLAlchemy with the app
+migrate = Migrate(app, db)  # Initialize Flask-Migrate
 
 # Configure SocketIO with the allowed origins
 socketio = SocketIO(app, cors_allowed_origins=["https://league-manager-react.onrender.com"], async_mode='eventlet')
