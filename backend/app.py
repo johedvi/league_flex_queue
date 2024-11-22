@@ -1,7 +1,7 @@
 # backend/app.py
 
-import eventlet
-eventlet.monkey_patch()
+#import eventlet
+#eventlet.monkey_patch()
 
 
 import os
@@ -34,7 +34,7 @@ db.init_app(app)
 migrate = Migrate(app, db)  # Initialize Flask-Migrate
 
 # Configure SocketIO with the allowed origins
-socketio = SocketIO(app, cors_allowed_origins=["https://blackultras-flex.onrender.com"])
+socketio = SocketIO(app, cors_allowed_origins=["https://blackultras-flex.onrender.com"], async_mode='gevent')
 
 # Import models after initializing db to prevent circular imports
 from models import Player
