@@ -41,6 +41,14 @@ from models import Player
 # In-memory queue for players (use a database or persistent storage in production)
 player_queue = []
 
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = 'https://blackultras-flex.onrender.com'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+    response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
+    return response
+
+
 @app.route('/')
 def index():
     return "Backend is running!", 200
