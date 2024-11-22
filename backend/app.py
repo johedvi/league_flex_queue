@@ -14,6 +14,10 @@ from riot_api import get_summoner_info, get_recent_match_id, get_team_members, c
 import settings
 from database import db
 
+from dotenv import load_dotenv
+
+load_dotenv()  # Loads environment variables from .env
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
