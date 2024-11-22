@@ -1,8 +1,8 @@
 # backend/app.py
-
+eventlet.monkey_patch()
 import os
 import eventlet
-eventlet.monkey_patch()
+
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS

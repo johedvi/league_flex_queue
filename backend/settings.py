@@ -1,5 +1,7 @@
 
-API_KEY = "RGAPI-ad0f9df6-5fb9-4c3d-aa86-0bdaf58b23b6"
+API_KEY = 'RGAPI-ad0f9df6-5fb9-4c3d-aa86-0bdaf58b23b6'
+DEFAULT_REGION_CODE = 'eune1'
+DEFAULT_REGION = 'europe'
 # config.py
 import os
 
