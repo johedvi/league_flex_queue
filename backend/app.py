@@ -37,7 +37,11 @@ db.init_app(app)
 migrate = Migrate(app, db)  # Initialize Flask-Migrate
 
 # Configure SocketIO with the allowed origins
-socketio = SocketIO(app, cors_allowed_origins=["blackultras.com"], async_mode='gevent')
+socketio = SocketIO(app, cors_allowed_origins=[
+    "https://blackultras.com", 
+    "http://blackultras.com", 
+    "https://www.blackultras.com"
+], async_mode='gevent')
 
 # Import models after initializing db to prevent circular imports
 from models import Player
@@ -204,10 +208,3 @@ def handle_connect():
 def handle_disconnect():
     logging.info("A client has disconnected.")
 
-
-if __name__ == '__main__':
-    # Enable debug mode for development purposes
-    app.debug = True
-    
-    # Run the Flask application
-    app.run(host='0.0.0.0', port=5000)
