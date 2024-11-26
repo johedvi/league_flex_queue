@@ -3,14 +3,14 @@ import settings
 import requests
 from urllib.parse import urlencode
 
-def get_summoner_info(summoner_name=None, summoner_tagline=None, region=settings.DEFAULT_REGION):
+def get_summoner_info(summoner_name=None, summoner_tagline=None, region=settings.Config.DEFAULT_REGION):
     if not summoner_name:
         summoner_name = input("Summoner name: ")
     
     if not summoner_tagline:
         summoner_tagline = input("Summoner tagline: ")
     
-    params = {'api_key': settings.API_KEY}
+    params = {'api_key': settings.Config.API_KEY}
     # Ensure the region code is correct
     api_url = f"https://{region}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summoner_name}/{summoner_tagline}"
     
@@ -22,8 +22,8 @@ def get_summoner_info(summoner_name=None, summoner_tagline=None, region=settings
         print(f'Issue getting summoner data from API: {e}')
         return None
 
-def get_match_ids_by_summoner_puuid(summoner_puuid, matches_count=1, region=settings.DEFAULT_REGION):
-    params = {'api_key': settings.API_KEY, 'count': matches_count}
+def get_match_ids_by_summoner_puuid(summoner_puuid, matches_count=1, region=settings.Config.DEFAULT_REGION):
+    params = {'api_key': settings.Config.API_KEY, 'count': matches_count}
     api_url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/by-puuid/{summoner_puuid}/ids"
     try:
         response = requests.get(api_url, params=params)
@@ -33,8 +33,8 @@ def get_match_ids_by_summoner_puuid(summoner_puuid, matches_count=1, region=sett
         print(f'Issue getting summoner match data from API: {e}')
         return None
 
-def did_player_win_match(summoner_puuid, match_id, region=settings.DEFAULT_REGION):
-    params = {'api_key': settings.API_KEY}
+def did_player_win_match(summoner_puuid, match_id, region=settings.Config.DEFAULT_REGION):
+    params = {'api_key': settings.Config.API_KEY}
     api_url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/{match_id}"
     
     try:
@@ -53,10 +53,10 @@ def did_player_win_match(summoner_puuid, match_id, region=settings.DEFAULT_REGIO
     player_info = match_data['info']['participants'][player_index]
     return player_info['win']
 
-def get_recent_match_id(puuid, region=settings.DEFAULT_REGION):
+def get_recent_match_id(puuid, region=settings.Config.DEFAULT_REGION):
     """Fetches the most recent match ID for the given PUUID."""
     api_url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
-    params = {'api_key': settings.API_KEY, 'start': 0, 'count': 1}
+    params = {'api_key': settings.Config.API_KEY, 'start': 0, 'count': 1}
     
     try:
         response = requests.get(api_url, params=params)
@@ -68,10 +68,10 @@ def get_recent_match_id(puuid, region=settings.DEFAULT_REGION):
         print(f'Issue getting recent match ID: {e}')
     return None
 
-def get_team_members(puuid, match_id, region=settings.DEFAULT_REGION):
+def get_team_members(puuid, match_id, region=settings.Config.DEFAULT_REGION):
     """Gets all team members for the given match."""
     api_url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/{match_id}"
-    params = {'api_key': settings.API_KEY}
+    params = {'api_key': settings.Config.API_KEY}
     
     try:
         response = requests.get(api_url, params=params)
