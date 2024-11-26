@@ -37,7 +37,7 @@ db.init_app(app)
 migrate = Migrate(app, db)  # Initialize Flask-Migrate
 
 # Configure SocketIO with the allowed origins
-socketio = SocketIO(app, cors_allowed_origins=["https://blackultras-flex.onrender.com"], async_mode='gevent')
+socketio = SocketIO(app, cors_allowed_origins=["https://blackultras-flex.onrender.com", "https://blackultras.com/"], async_mode='gevent')
 
 # Import models after initializing db to prevent circular imports
 from models import Player
@@ -204,4 +204,10 @@ def handle_connect():
 def handle_disconnect():
     logging.info("A client has disconnected.")
 
-# No need for the if __name__ == '__main__' block when using Gunicorn
+
+if __name__ == '__main__':
+    # Enable debug mode for development purposes
+    app.debug = True
+    
+    # Run the Flask application
+    app.run(host='0.0.0.0', port=5000)
