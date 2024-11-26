@@ -51,10 +51,14 @@ player_queue = []
 
 @app.after_request
 def add_cors_headers(response):
-    response.headers['Access-Control-Allow-Origin'] = 'blackultras.com'
+    allowed_origins = ["https://blackultras.com", "https://www.blackultras.com"]
+    origin = request.headers.get('Origin')
+    if origin in allowed_origins:
+        response.headers['Access-Control-Allow-Origin'] = origin
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
     response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
     return response
+
 
 @app.errorhandler(500)
 def internal_error(error):
