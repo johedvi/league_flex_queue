@@ -1,150 +1,34 @@
-/* src/App.css */
+/* src/styles/App.css */
 
+/* Base styles shared globally */
 body {
   font-family: Arial, sans-serif;
   margin: 20px;
-  background-color: #000; /* Black background */
-  color: #fff; /* White text for contrast */
+  background-color: #f9f9f9;
+  color: #333;
 }
 
+/* Typography */
 h1, h2, h3 {
-  color: #ff0000; /* Red text to match the theme */
   text-align: center;
-  text-transform: uppercase; /* Adds emphasis */
+  color: #333;
 }
 
-header {
-  background-size: cover;
-  height: 200px; /* Adjust height as needed */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  text-shadow: 2px 2px 5px #000; /* Adds depth to the text */
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  margin: 5px 0;
-}
-
-.error {
-  color: #ff0000; /* Bright red for errors */
-}
-
+/* Container for all sections */
 .container {
   display: flex;
   justify-content: space-between;
   flex-wrap: nowrap;
 }
 
-.queue, .search, .wheel-section {
-  width: 32%;
-  min-width: 280px;
-  margin: 10px;
-  background-color: #2b2b2b; /* Dark gray background for cards */
-  padding: 15px;
-  box-shadow: 0 4px 10px rgba(255, 0, 0, 0.3); /* Red glow shadow */
-  border-radius: 8px;
-  box-sizing: border-box;
+.error {
+  color: red;
 }
 
-.wheel-container {
-  position: relative;
-  width: 100%; /* Ensure wheel fills its container */
-  max-width: 200px;
-  height: auto;
-  margin: 0 auto; /* Center the wheel */
-}
-
-.arrow {
-  position: absolute;
-  top: -15px;
-  left: 50%;
-  transform: translateX(-50%) rotate(180deg);
-  width: 0;
-  height: 0;
-  border-left: 15px solid transparent;
-  border-right: 15px solid transparent;
-  border-bottom: 30px solid #ff0000; /* Red arrow */
-  z-index: 10;
-}
-
-canvas {
-  border-radius: 50%;
-  background-color: #111; /* Matches the card background */
-  display: block;
-  border: 2px solid #ff0000; /* Adds a red border to the wheel */
-}
-
-button {
-  margin-top: 10px;
-  padding: 8px 16px;
-  font-size: 14px;
-  cursor: pointer;
-  background-color: #ff0000; /* Red button */
-  color: white;
-  border: none;
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background-color: #cc0000; /* Darker red on hover */
-}
-
-.nameInput {
-  margin: 20px 0;
-  display: flex;
-  gap: 10px;
-}
-
-.nameInput input {
-  flex: 1;
-  padding: 8px;
-  font-size: 14px;
-  background-color: #222; /* Dark background for inputs */
-  color: #fff;
-  border: 1px solid #ff0000;
-  border-radius: 4px;
-}
-
-.nameList {
-  margin-top: 20px;
-  font-size: 14px;
-  color: #fff;
-}
-
-.result {
-  margin-top: 20px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #ff0000; /* Red for results */
-  text-align: center;
-}
-
-/* Responsive Adjustments */
+/* Responsive rules (applied globally) */
 @media (max-width: 1000px) {
   .container {
-      flex-wrap: wrap;
-      justify-content: center;
-  }
-  .queue, .search, .wheel-section {
-      width: 90%;
-      max-width: 400px;
-  }
-  .wheel-container {
-      width: 150px; /* Adjust for smaller screens */
-      height: auto;
-  }
-  .arrow {
-      top: -10px;
-      border-left: 10px solid transparent;
-      border-right: 10px solid transparent;
-      border-bottom: 20px solid #2b2b2b;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
