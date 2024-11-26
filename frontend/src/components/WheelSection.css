@@ -19,20 +19,21 @@
     width: 100%;
     max-width: 200px;
     height: auto;
+    margin: 0 auto;
     margin-bottom: 20px; /* Add space below the wheel */
 }
 
 .arrow {
     position: absolute;
-    top: -15px;
+    top: -15px; /* Keep it positioned above the wheel */
     left: 50%;
-    transform: translateX(-50%) rotate(180deg);
+    transform: translateX(-50%) rotate(180deg); /* Center and point downward */
     width: 0;
     height: 0;
     border-left: 15px solid transparent;
     border-right: 15px solid transparent;
     border-bottom: 30px solid #ff0000; /* Red arrow */
-    z-index: 10;
+    z-index: 10; /* Ensure it appears above the wheel */
 }
 
 canvas {
