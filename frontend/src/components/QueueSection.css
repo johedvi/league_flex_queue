@@ -4,21 +4,57 @@
   width: 32%;
   min-width: 280px;
   margin: 10px;
-  background-color: #fff;
+  background-color: #2b2b2b; /* Dark gray background */
   padding: 15px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(255, 0, 0, 0.3); /* Red glow shadow */
+  border-radius: 8px; /* Rounded corners */
   box-sizing: border-box;
 }
 
 .queue-section h2 {
-  color: #e63946;
+  color: #ff0000; /* Bright red header */
   text-align: center;
+}
+
+.add-player-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.add-player-form input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #444; /* Darker border */
+  border-radius: 4px;
+  background-color: #333; /* Dark input background */
+  color: #fff; /* Light text */
+}
+
+.add-player-form button {
+  padding: 8px 16px;
+  background-color: #ff0000; /* Bright red button */
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-player-form button:hover {
+  background-color: #cc0000; /* Darker red hover */
+}
+
+.queue-list {
+  list-style-type: none;
+  padding: 0;
 }
 
 .queue-item {
   padding: 8px 0;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #555; /* Darker line */
+  font-size: 16px;
+  color: #fff; /* White text for items */
 }
 
 .queue-item:last-child {

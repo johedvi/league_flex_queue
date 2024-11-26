@@ -1,20 +1,19 @@
 /* src/styles/App.css */
 
-/* Base styles shared globally */
+/* Global Dark Theme */
 body {
   font-family: Arial, sans-serif;
   margin: 20px;
-  background-color: #f9f9f9;
-  color: #333;
+  background-color: #000; /* Black background */
+  color: #fff; /* White text for contrast */
 }
 
-/* Typography */
 h1, h2, h3 {
+  color: #ff0000; /* Bright red headers */
   text-align: center;
-  color: #333;
+  text-transform: uppercase; /* Adds emphasis */
 }
 
-/* Container for all sections */
 .container {
   display: flex;
   justify-content: space-between;
@@ -22,13 +21,13 @@ h1, h2, h3 {
 }
 
 .error {
-  color: red;
+  color: #ff0000; /* Bright red for errors */
 }
 
-/* Responsive rules (applied globally) */
+/* Responsive Adjustments */
 @media (max-width: 1000px) {
   .container {
-    flex-wrap: wrap;
-    justify-content: center;
+      flex-wrap: wrap;
+      justify-content: center;
   }
 }

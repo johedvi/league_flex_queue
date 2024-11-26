@@ -1,5 +1,6 @@
 // src/components/WheelSection.js
 import React, { useState, useEffect, useRef } from 'react';
+import './WheelSection.css'; // Optional: For styling purposes
 
 const WheelSection = () => {
   const canvasRef = useRef(null);
