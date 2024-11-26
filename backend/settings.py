@@ -8,5 +8,5 @@ class Config:
     DEFAULT_REGION = 'europe'    
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    BACKEND_URL = 'https://blackultrasflex-backend.onrender.com'
+    BACKEND_URL = 'https://api.blackultras.com'
 

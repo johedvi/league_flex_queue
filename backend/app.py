@@ -37,7 +37,7 @@ db.init_app(app)
 migrate = Migrate(app, db)  # Initialize Flask-Migrate
 
 # Configure SocketIO with the allowed origins
-socketio = SocketIO(app, cors_allowed_origins=["https://blackultras-flex.onrender.com", "https://blackultras.com/"], async_mode='gevent')
+socketio = SocketIO(app, cors_allowed_origins=["https://blackultras-flex.onrender.com", "https://blackultras.com/", "https://api.blackultras.com"], async_mode='gevent')
 
 # Import models after initializing db to prevent circular imports
 from models import Player
