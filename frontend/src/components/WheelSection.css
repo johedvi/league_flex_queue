@@ -1,6 +1,9 @@
-/* WheelSection.css */
-
+/* Center the entire content inside the wheel-section */
 .wheel-section {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Horizontally center items */
+    justify-content: center; /* Vertically center items if needed */
     width: 32%;
     min-width: 280px;
     margin: 10px;
@@ -12,45 +15,35 @@
 }
 
 .wheel-container {
-    position: relative;
-    width: 100%;
-    max-width: 200px;
-    height: auto;
-    margin: 0 auto;
+    margin-bottom: 20px; /* Add space between the wheel and the input */
 }
 
-.arrow {
-    position: absolute;
-    top: -15px;
-    left: 50%;
-    transform: translateX(-50%) rotate(180deg);
-    width: 0;
-    height: 0;
-    border-left: 15px solid transparent;
-    border-right: 15px solid transparent;
-    border-bottom: 30px solid #ff0000; /* Red arrow */
-    z-index: 10;
+.input-container {
+    display: flex;
+    justify-content: center; /* Center the input field and button */
+    gap: 10px; /* Add space between the input field and button */
+    margin-top: 10px; /* Space between the input container and other elements */
 }
 
-canvas {
-    border-radius: 50%;
-    background-color: #111; /* Matches the card background */
-    display: block;
-    border: 2px solid #ff0000; /* Adds a red border to the wheel */
-}
-
-button {
-    margin-top: 10px;
-    padding: 8px 16px;
+.input-container input {
+    padding: 8px;
+    border: 1px solid #ff0000;
+    border-radius: 4px;
+    background-color: #222; /* Dark background for inputs */
+    color: #fff;
     font-size: 14px;
-    cursor: pointer;
-    background-color: #ff0000; /* Red button */
-    color: white;
+}
+
+.input-container button {
+    padding: 8px 16px;
+    background-color: #ff0000; /* Bright red button */
     border: none;
-    border-radius: 5px;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
-button:hover {
-    background-color: #cc0000; /* Darker red on hover */
+.input-container button:hover {
+    background-color: #cc0000; /* Darker red hover */
 }
