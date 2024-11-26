@@ -55,9 +55,10 @@ li {
 
 .wheel-container {
   position: relative;
-  width: 200px;
-  height: 200px;
-  margin: 0 auto;
+  width: 100%; /* Ensure wheel fills its container */
+  max-width: 200px;
+  height: auto;
+  margin: 0 auto; /* Center the wheel */
 }
 
 .arrow {
@@ -137,8 +138,8 @@ button:hover {
       max-width: 400px;
   }
   .wheel-container {
-      width: 150px;
-      height: 150px;
+      width: 150px; /* Adjust for smaller screens */
+      height: auto;
   }
   .arrow {
       top: -10px;
