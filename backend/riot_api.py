@@ -110,3 +110,26 @@ def calculate_scores(team_members):
         scores.append({'summonerName': member.get('summonerName', 'Unknown'), 'score': score})
     
     return scores
+
+# förslag på score calculation
+def calculate_scores_v2(team_members):
+    """Calculates individual scores for a team based on match performance."""
+    scores = []
+    w = {'kills': 4, 'deaths': -2, 'assists': 2, 'cs': 2}
+    for member in team_members:
+        kills = member.get('kills', 0)
+        deaths = member.get('deaths', 0)
+        assists = member.get('assists', 0)
+        cs = member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0)
+
+        # bound feature to 1 using sigmoid
+        kills = math.erf(1/10 * kills)
+        deaths = math.erf(1/10 * deaths)
+        assists = math.erf(1/10 * assists)
+        cs = math.erf(1/200 * cs)
+        
+        # Example scoring formula
+        score = (w['kills'] * kills + w['assist'] * assists + w['deaths'] * deaths + w['cs'] * cs)
+        scores.append({'summonerName': member.get('summonerName', 'Unknown'), 'score': score})
+    
+    return scores
