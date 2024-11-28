@@ -130,7 +130,7 @@ def calculate_scores(team_members):
         cs = math.erf(1/200 * cs)
         
         # Example scoring formula
-        score = (w['kills'] * kills + w['assist'] * assists + w['deaths'] * deaths + w['cs'] * cs)
+        score = (w['kills'] * kills + w['assists'] * assists + w['deaths'] * deaths + w['cs'] * cs)
         scores.append({'summonerName': member.get('summonerName', 'Unknown'), 'score': score})
     
     return scores
