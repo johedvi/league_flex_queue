@@ -1,6 +1,7 @@
 # riot_api.py
 import settings
 import requests
+import math
 from urllib.parse import urlencode
 
 def get_summoner_info(summoner_name=None, summoner_tagline=None, region=settings.Config.DEFAULT_REGION):
