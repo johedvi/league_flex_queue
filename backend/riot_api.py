@@ -96,7 +96,7 @@ def get_team_members(puuid, match_id, region=settings.Config.DEFAULT_REGION):
     team_members = [p for p in participants if p['teamId'] == team_id]
     return team_members
 
-def calculate_scores(team_members):
+def calculate_scores_v1(team_members):
     """Calculates individual scores for a team based on match performance."""
     scores = []
     for member in team_members:
@@ -112,7 +112,7 @@ def calculate_scores(team_members):
     return scores
 
 # förslag på score calculation
-def calculate_scores_v2(team_members):
+def calculate_scores(team_members):
     """Calculates individual scores for a team based on match performance."""
     scores = []
     w = {'kills': 4, 'deaths': -2, 'assists': 2, 'cs': 2}
