@@ -112,11 +112,6 @@ def calculate_scores_v1(team_members):
     
     return scores
 
-import settings
-import requests
-import math
-from urllib.parse import urlencode
-
 def calculate_scores(team_members):
     """Calculates individual scores for a team based on match performance.
     
@@ -130,34 +125,29 @@ def calculate_scores(team_members):
         summoner_name = member.get('summonerName', 'Unknown')
         is_lil_newton = summoner_name.lower() == target_name
 
-        
-        # Check if the summoner is 'Lil Newton' (case-insensitive)
-        if summoner_name.lower() == 'lil newton':
-            score =-3
-        else:
-            kills = member.get('kills', 0)
-            deaths = member.get('deaths', 0)
-            assists = member.get('assists', 0)
-            cs = member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0)
+        kills = member.get('kills', 0)
+        deaths = member.get('deaths', 0)
+        assists = member.get('assists', 0)
+        cs = member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0)
 
-            # Apply sigmoid-like scaling using the error function
-            scaled_kills = math.erf(1/10 * kills)
-            scaled_deaths = math.erf(1/10 * deaths)
-            scaled_assists = math.erf(1/10 * assists)
-            scaled_cs = math.erf(1/200 * cs)
+        # Apply sigmoid-like scaling using the error function
+        scaled_kills = math.erf(1/10 * kills)
+        scaled_deaths = math.erf(1/10 * deaths)
+        scaled_assists = math.erf(1/10 * assists)
+        scaled_cs = math.erf(1/200 * cs)
             
             # Calculate the score based on weighted metrics
-            base_score = (
+        base_score = (
                 w['kills'] * scaled_kills +
                 w['assists'] * scaled_assists +
                 w['deaths'] * scaled_deaths +
                 w['cs'] * scaled_cs
             )
 
-            if is_lil_newton:
-                adjusted_score = base_score - 3
-            else:
-                adjusted_score = base_score
+        if is_lil_newton:
+            adjusted_score = base_score - 3
+        else:
+            adjusted_score = base_score
         
         scores.append({'summonerName': summoner_name, 'score': adjusted_score})
     
