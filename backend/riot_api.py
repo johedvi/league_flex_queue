@@ -149,7 +149,10 @@ def calculate_scores(team_members):
         else:
             adjusted_score = base_score
         
-        scores.append({'summonerName': summoner_name, 'score': adjusted_score})
+        rounded_score = round(adjusted_score, 2)
+
+        
+        scores.append({'summonerName': summoner_name, 'score': rounded_score})
     
     return scores
 
