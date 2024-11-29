@@ -112,25 +112,45 @@ def calculate_scores_v1(team_members):
     
     return scores
 
-# förslag på score calculation
+import settings
+import requests
+import math
+from urllib.parse import urlencode
+
 def calculate_scores(team_members):
-    """Calculates individual scores for a team based on match performance."""
+    """Calculates individual scores for a team based on match performance.
+    
+    Players named 'Lil Newton' receive a flat score of -3.
+    """
     scores = []
     w = {'kills': 4, 'deaths': -2, 'assists': 2, 'cs': 2}
     for member in team_members:
-        kills = member.get('kills', 0)
-        deaths = member.get('deaths', 0)
-        assists = member.get('assists', 0)
-        cs = member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0)
-
-        # bound feature to 1 using sigmoid
-        kills = math.erf(1/10 * kills)
-        deaths = math.erf(1/10 * deaths)
-        assists = math.erf(1/10 * assists)
-        cs = math.erf(1/200 * cs)
+        summoner_name = member.get('summonerName', 'Unknown')
         
-        # Example scoring formula
-        score = (w['kills'] * kills + w['assists'] * assists + w['deaths'] * deaths + w['cs'] * cs)
-        scores.append({'summonerName': member.get('summonerName', 'Unknown'), 'score': score})
+        # Check if the summoner is 'Lil Newton' (case-insensitive)
+        if summoner_name.lower() == 'lil newton':
+            score = -3
+        else:
+            kills = member.get('kills', 0)
+            deaths = member.get('deaths', 0)
+            assists = member.get('assists', 0)
+            cs = member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0)
+
+            # Apply sigmoid-like scaling using the error function
+            scaled_kills = math.erf(1/10 * kills)
+            scaled_deaths = math.erf(1/10 * deaths)
+            scaled_assists = math.erf(1/10 * assists)
+            scaled_cs = math.erf(1/200 * cs)
+            
+            # Calculate the score based on weighted metrics
+            score = (
+                w['kills'] * scaled_kills +
+                w['assists'] * scaled_assists +
+                w['deaths'] * scaled_deaths +
+                w['cs'] * scaled_cs
+            )
+        
+        scores.append({'summonerName': summoner_name, 'score': score})
     
     return scores
+
