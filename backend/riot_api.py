@@ -124,12 +124,16 @@ def calculate_scores(team_members):
     """
     scores = []
     w = {'kills': 4, 'deaths': -2, 'assists': 2, 'cs': 2}
+    target_name = 'lil newton'  # Lowercase target name for comparison
+
     for member in team_members:
         summoner_name = member.get('summonerName', 'Unknown')
+        is_lil_newton = summoner_name.lower() == target_name
+
         
         # Check if the summoner is 'Lil Newton' (case-insensitive)
         if summoner_name.lower() == 'lil newton':
-            score = -3
+            score =-3
         else:
             kills = member.get('kills', 0)
             deaths = member.get('deaths', 0)
@@ -143,14 +147,19 @@ def calculate_scores(team_members):
             scaled_cs = math.erf(1/200 * cs)
             
             # Calculate the score based on weighted metrics
-            score = (
+            base_score = (
                 w['kills'] * scaled_kills +
                 w['assists'] * scaled_assists +
                 w['deaths'] * scaled_deaths +
                 w['cs'] * scaled_cs
             )
+
+            if is_lil_newton:
+                adjusted_score = base_score - 3
+            else:
+                adjusted_score = base_score
         
-        scores.append({'summonerName': summoner_name, 'score': score})
+        scores.append({'summonerName': summoner_name, 'score': adjusted_score})
     
     return scores
 
