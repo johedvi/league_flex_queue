@@ -270,6 +270,7 @@ def update_leaderboard():
 
     with app.app_context():
 
+
         for player_info in PREDEFINED_PLAYERS:
             summoner_name = player_info['summoner_name']
             tagline = player_info['tagline']
@@ -277,6 +278,7 @@ def update_leaderboard():
             # Fetch player from database or create if not exists
             player = Player.query.filter_by(summoner_name=summoner_name, tagline=tagline).first()
           
+        
             puuid = player.puuid
 
             # Fetch latest 20 matches
