@@ -267,15 +267,22 @@ def update_leaderboard():
     """
     Updates the leaderboard by fetching new matches for each player and recalculating scores.
     """
+
+    db.drop_all()
+
     with app.app_context():
+
         for player_info in PREDEFINED_PLAYERS:
             summoner_name = player_info['summoner_name']
             tagline = player_info['tagline']
             
             # Fetch player from database or create if not exists
             player = Player.query.filter_by(summoner_name=summoner_name, tagline=tagline).first()
-            
-            puuid = player.puuid
+            if not player:
+               pass
+
+            else:
+                puuid = player.puuid
 
             # Fetch latest 20 matches
             match_ids = get_match_ids_by_summoner_puuid(puuid, match_count=20, region=settings.Config.DEFAULT_REGION)
