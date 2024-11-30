@@ -5,6 +5,8 @@ from gevent import monkey
 monkey.patch_all()
 
 import os
+import time
+from threading import Lock
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -37,8 +39,6 @@ CORS(app)
 app.config.from_object(settings.Config)
 
 # Initialize extensions
-# Allow only your frontend's origin for CORS
-
 db.init_app(app)
 migrate = Migrate(app, db)  # Initialize Flask-Migrate
 
@@ -50,7 +50,7 @@ socketio = SocketIO(app, cors_allowed_origins=[
 ], async_mode='gevent')
 
 # Import models after initializing db to prevent circular imports
-from models import Player
+from models import Player, Match  # Ensure Match model is imported
 
 # In-memory queue for players (use a database or persistent storage in production)
 player_queue = []
@@ -67,15 +67,18 @@ PREDEFINED_PLAYERS = [
     {'summoner_name': 'jonteproo', 'tagline': 'EUNE'},
     {'summoner_name': 'stiga12', 'tagline': 'EUNE'},
     {'summoner_name': 'lHgXRudolf', 'tagline': 'EUNE'},
-
     # Add more players as needed
 ]
 
-# Initialize caching (if not already initialized)
+# Initialize caching
 from flask_caching import Cache  # Import Flask-Caching
 
-cache = Cache(config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})  # 5 minutes
+cache = Cache(config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})  # Cache timeout set to 5 minutes
 cache.init_app(app)
+
+# Initialize the lock and last update time for leaderboard updates
+leaderboard_lock = Lock()
+last_leaderboard_update = 0  # Timestamp of the last update
 
 @app.after_request
 def add_cors_headers(response):
@@ -230,84 +233,146 @@ def delete_player(player_id):
     logging.info(f"Emitted 'queue_updated' event: {player_queue}")
     return jsonify({'message': f'Player {player.summoner_name} deleted.'}), 200
 
-# Add the leaderboard functionality below without changing existing code
 @app.route('/api/leaderboard', methods=['GET'])
 def get_leaderboard():
     """
-    Retrieve the leaderboard data for the predefined list of players.
+    Retrieve the leaderboard data, updating it if necessary.
     """
-    # Use caching to prevent hitting Riot API rate limits
+    global last_leaderboard_update
+
+    update_interval = 300  # Update every 5 minutes
+    current_time = time.time()
+
+    with leaderboard_lock:
+        time_since_last_update = current_time - last_leaderboard_update
+        if time_since_last_update >= update_interval:
+            logging.info("Updating leaderboard data.")
+            try:
+                update_leaderboard()
+                last_leaderboard_update = current_time
+            except Exception as e:
+                logging.error(f"Error updating leaderboard: {e}")
+                # Decide whether to serve stale data or return an error
+        else:
+            logging.info(f"Using cached leaderboard data. Next update in {int(update_interval - time_since_last_update)} seconds.")
+
+    # Retrieve the cached leaderboard data
     leaderboard_data = cache.get('leaderboard_data')
     if leaderboard_data:
-        logging.info("Cache hit for leaderboard data.")
         return jsonify({'leaderboard': leaderboard_data}), 200
+    else:
+        return jsonify({'error': 'Unable to retrieve leaderboard data.'}), 500
 
-    logging.info("Cache miss for leaderboard data. Fetching data.")
-    leaderboard_data = []
+def update_leaderboard():
+    """
+    Updates the leaderboard by fetching new matches for each player and recalculating scores.
+    """
+    with app.app_context():
+        for player_info in PREDEFINED_PLAYERS:
+            summoner_name = player_info['summoner_name']
+            tagline = player_info['tagline']
+            
+            # Fetch player from database or create if not exists
+            player = Player.query.filter_by(summoner_name=summoner_name, tagline=tagline).first()
+            if not player:
+                # Fetch player PUUID
+                player_data = get_summoner_info(summoner_name, tagline, region=settings.Config.DEFAULT_REGION)
+                if not player_data:
+                    logging.error(f"Player {summoner_name}#{tagline} not found.")
+                    continue  # Skip to the next player
 
-    for player_info in PREDEFINED_PLAYERS:
-        summoner_name = player_info['summoner_name']
-        tagline = player_info['tagline']
+                puuid = player_data.get('puuid')
+                if not puuid:
+                    logging.error(f"PUUID not found for player {summoner_name}#{tagline}.")
+                    continue
 
-        # Fetch player PUUID
-        player_data = get_summoner_info(summoner_name, tagline, region=settings.Config.DEFAULT_REGION)
-        if not player_data:
-            logging.error(f"Player {summoner_name}#{tagline} not found.")
-            continue  # Skip to the next player
+                # Create new Player instance
+                player = Player(summoner_name=summoner_name, tagline=tagline, puuid=puuid)
+                db.session.add(player)
+                db.session.commit()
 
-        puuid = player_data.get('puuid')
-        if not puuid:
-            logging.error(f"PUUID not found for player {summoner_name}#{tagline}.")
-            continue
+            else:
+                puuid = player.puuid
 
-        # Fetch latest 20 matches
-        match_ids = get_match_ids_by_summoner_puuid(puuid, match_count=20, region=settings.Config.DEFAULT_REGION)
-        if not match_ids:
-            logging.info(f"No matches found for {summoner_name}#{tagline}")
-            continue
-
-        # Fetch and process matches
-        total_score = 0
-        match_count = 0
-        for match_id in match_ids:
-            match_data = get_match_data(match_id, region=settings.Config.DEFAULT_REGION)
-            if not match_data:
+            # Fetch latest 20 matches
+            match_ids = get_match_ids_by_summoner_puuid(puuid, match_count=20, region=settings.Config.DEFAULT_REGION)
+            if not match_ids:
+                logging.info(f"No matches found for {summoner_name}#{tagline}")
                 continue
 
-            # Verify queue ID (e.g., Flex Ranked 5v5 is queueId 440)
-            if match_data.get('info', {}).get('queueId') != 440:
-                logging.info(f"Skipping match {match_id} (non-Flex Ranked 5v5)")
-                continue
+            existing_match_ids = {match.match_id for match in player.matches}
+            new_match_ids = [mid for mid in match_ids if mid not in existing_match_ids]
 
-            player_stats = get_player_stats_in_match(puuid, match_data)
-            if not player_stats:
-                logging.info(f"Player stats not found in match {match_id}")
-                continue
+            # Fetch and process new matches
+            for match_id in new_match_ids:
+                match_data = get_match_data(match_id, region=settings.Config.DEFAULT_REGION)
+                if not match_data:
+                    continue
 
-            # Calculate score
-            scores = calculate_scores([player_stats])
-            score_data = scores[0]
-            total_score += score_data['score']
-            match_count += 1
+                # Verify queue ID (e.g., Flex Ranked 5v5 is queueId 440)
+                if match_data.get('info', {}).get('queueId') != 440:
+                    logging.info(f"Skipping match {match_id} (non-Flex Ranked 5v5)")
+                    continue
 
-        average_score = total_score / match_count if match_count > 0 else 0.0
+                player_stats = get_player_stats_in_match(puuid, match_data)
+                if not player_stats:
+                    logging.info(f"Player stats not found in match {match_id}")
+                    continue
 
-        leaderboard_entry = {
-            'summoner_name': summoner_name,
-            'tagline': tagline,
-            'average_score': average_score,
-            'last_updated': datetime.utcnow().isoformat()
-        }
+                # Calculate score
+                scores = calculate_scores([player_stats])
+                score_data = scores[0]
 
-        leaderboard_data.append(leaderboard_entry)
+                # Create Match entry
+                match = Match(
+                    match_id=match_id,
+                    player_id=player.id,
+                    score=score_data['score'],
+                    kills=player_stats.get('kills', 0),
+                    deaths=player_stats.get('deaths', 0),
+                    assists=player_stats.get('assists', 0),
+                    cs=player_stats.get('totalMinionsKilled', 0) + player_stats.get('neutralMinionsKilled', 0),
+                    timestamp=datetime.fromtimestamp(match_data['info']['gameEndTimestamp'] / 1000)
+                )
+                db.session.add(match)
 
-    # Sort the leaderboard by average score in descending order
-    leaderboard_data.sort(key=lambda x: x['average_score'], reverse=True)
+            # Commit new matches to the database
+            db.session.commit()
 
-    # Cache the leaderboard data for 5 minutes to prevent frequent API calls
-    cache.set('leaderboard_data', leaderboard_data, timeout=300)
+            # Remove old matches if total exceeds 20
+            player_matches = player.matches
+            if len(player_matches) > 20:
+                matches_to_delete = sorted(player_matches, key=lambda m: m.timestamp)[:-20]
+                for old_match in matches_to_delete:
+                    db.session.delete(old_match)
+                db.session.commit()
+                logging.info(f"Deleted {len(matches_to_delete)} old matches for {player.summoner_name}#{tagline}")
 
-    return jsonify({'leaderboard': leaderboard_data}), 200
+            # Recalculate total and average score
+            player_matches = player.matches  # Refresh relationship
+            total_score = sum(match.score for match in player_matches)
+            average_score = total_score / len(player_matches) if player_matches else 0.0
+
+            player.total_score = total_score
+            player.average_score = average_score
+            player.last_updated = datetime.utcnow()
+            db.session.commit()
+
+            logging.info(f"Updated {player.summoner_name}#{tagline}: Total Score={player.total_score}, Average Score={player.average_score}")
+
+        # Update the cached leaderboard data
+        leaderboard_entries = Player.query.order_by(Player.average_score.desc()).limit(100).all()
+        leaderboard_data = [
+            {
+                'summoner_name': entry.summoner_name,
+                'tagline': entry.tagline,
+                'average_score': entry.average_score,
+                'last_updated': entry.last_updated.isoformat()
+            }
+            for entry in leaderboard_entries
+        ]
+        cache.set('leaderboard_data', leaderboard_data, timeout=300)
+        logging.info("Leaderboard data updated and cached.")
 
 # Define Socket.IO event handlers
 @socketio.on('connect')
