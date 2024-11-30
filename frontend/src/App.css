@@ -3,7 +3,7 @@
 /* Global Dark Theme */
 body {
   font-family: Arial, sans-serif;
-  margin: 20px;
+  margin: 0;
   background-color: #000; /* Black background */
   color: #fff; /* White text for contrast */
 }
@@ -12,22 +12,47 @@ h1, h2, h3 {
   color: #ff0000; /* Bright red headers */
   text-align: center;
   text-transform: uppercase; /* Adds emphasis */
-}
-
-.container {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: nowrap;
+  margin: 20px 0; /* Add some spacing */
 }
 
 .error {
   color: #ff0000; /* Bright red for errors */
 }
 
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Grid Container */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Two columns */
+  grid-gap: 20px;                       /* Gap between grid items */
+  width: 100%;
+}
+
+/* Grid Item */
+.grid-item {
+  width: 100%;
+}
+
+/* Component Styles */
+.queue-section,
+.search-section,
+.wheel-section,
+.player-profile {
+  background-color: #1a1a1a; /* Dark grey background for components */
+  padding: 20px;
+  box-sizing: border-box;
+  border: 1px solid #333; /* Optional: Add borders to components */
+}
+
 /* Responsive Adjustments */
 @media (max-width: 1000px) {
-  .container {
-      flex-wrap: wrap;
-      justify-content: center;
+  .grid-container {
+    grid-template-columns: 1fr; /* One column layout on small screens */
   }
 }
