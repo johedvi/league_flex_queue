@@ -274,25 +274,8 @@ def update_leaderboard():
             
             # Fetch player from database or create if not exists
             player = Player.query.filter_by(summoner_name=summoner_name, tagline=tagline).first()
-            if not player:
-                # Fetch player PUUID
-                player_data = get_summoner_info(summoner_name, tagline, region=settings.Config.DEFAULT_REGION)
-                if not player_data:
-                    logging.error(f"Player {summoner_name}#{tagline} not found.")
-                    continue  # Skip to the next player
-
-                puuid = player_data.get('puuid')
-                if not puuid:
-                    logging.error(f"PUUID not found for player {summoner_name}#{tagline}.")
-                    continue
-
-                # Create new Player instance
-                player = Player(summoner_name=summoner_name, tagline=tagline, puuid=puuid)
-                db.session.add(player)
-                db.session.commit()
-
-            else:
-                puuid = player.puuid
+            
+            puuid = player.puuid
 
             # Fetch latest 20 matches
             match_ids = get_match_ids_by_summoner_puuid(puuid, match_count=20, region=settings.Config.DEFAULT_REGION)
