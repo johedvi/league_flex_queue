@@ -276,11 +276,8 @@ def update_leaderboard():
             
             # Fetch player from database or create if not exists
             player = Player.query.filter_by(summoner_name=summoner_name, tagline=tagline).first()
-            if not player:
-               pass
-
-            else:
-                puuid = player.puuid
+          
+            puuid = player.puuid
 
             # Fetch latest 20 matches
             match_ids = get_match_ids_by_summoner_puuid(puuid, match_count=20, region=settings.Config.DEFAULT_REGION)
