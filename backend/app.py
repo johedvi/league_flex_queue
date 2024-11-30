@@ -268,8 +268,6 @@ def update_leaderboard():
     Updates the leaderboard by fetching new matches for each player and recalculating scores.
     """
 
-    db.drop_all()
-
     with app.app_context():
 
         for player_info in PREDEFINED_PLAYERS:
