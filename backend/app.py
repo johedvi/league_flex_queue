@@ -59,6 +59,15 @@ player_queue = []
 PREDEFINED_PLAYERS = [
     {'summoner_name': 'lil newton', 'tagline': 'EUNE'},
     {'summoner_name': 'bigbrainburton', 'tagline': 'EUNE'},
+    {'summoner_name': 'mysman', 'tagline': 'EUNE'},
+    {'summoner_name': 'optimus d snutz', 'tagline': '6969'},
+    {'summoner_name': 'zyzz enjoyer', 'tagline': '1337'},
+    {'summoner_name': 'bajveck', 'tagline': 'EUNE'},
+    {'summoner_name': 'rob', 'tagline': '13371'},
+    {'summoner_name': 'jonteproo', 'tagline': 'EUNE'},
+    {'summoner_name': 'stiga12', 'tagline': 'EUNE'},
+    {'summoner_name': 'lHgXRudolf', 'tagline': 'EUNE'},
+
     # Add more players as needed
 ]
 

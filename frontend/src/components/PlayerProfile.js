@@ -35,11 +35,11 @@ function PlayerProfile() {
 
   return (
     <div className="player-profile">
-      <h2>Leaderboard</h2>
+      <h2>Leaderboard performance (Snitt 20 senaste games)</h2>
       <ul>
         {leaderboardData.map((player, index) => (
           <li key={player.puuid}>
-            {index + 1}. {player.summoner_name}#{player.tagline}: {player.average_score.toFixed(2)} points
+            {index + 1}. {player.summoner_name}: {player.average_score.toFixed(2)} points
           </li>
         ))}
       </ul>
