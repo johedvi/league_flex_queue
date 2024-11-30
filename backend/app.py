@@ -119,10 +119,7 @@ def manage_queue():
                 return jsonify({'error': 'Player already in the queue.'}), 400
 
             player_queue.append(player_name)
-            # Optionally, add to the database
-            new_player = Player(summoner_name=player_name)
-            db.session.add(new_player)
-            db.session.commit()
+            # Do NOT add to the database
             # Emit the updated queue to all connected clients
             socketio.emit('queue_updated', {'queue': player_queue})
             logging.info(f"Emitted 'queue_updated' event: {player_queue}")
@@ -178,28 +175,13 @@ def search_player():
     if player_queue:
         new_player_name = player_queue.pop(0)  # Remove the first player in the queue
         logging.info(f"Adding new player from queue: {new_player_name}")
-        # Optionally, update the Player model
-        new_player = Player.query.filter_by(summoner_name=new_player_name).first()
-        if new_player:
-            db.session.delete(new_player)
-            db.session.commit()
-            logging.info(f"Deleted player from database: {new_player.summoner_name}")
         # Emit the updated queue to all connected clients
         socketio.emit('queue_updated', {'queue': player_queue})
         logging.info(f"Emitted 'queue_updated' event: {player_queue}")
     else:
         new_player_name = None  # No one in the queue
 
-    # Remove the player being searched for from the database to allow re-adding
-    if player_to_remove:
-        player_to_remove_record = Player.query.filter_by(summoner_name=player_to_remove['summonerName']).first()
-        if player_to_remove_record:
-            db.session.delete(player_to_remove_record)
-            db.session.commit()
-            logging.info(f"Deleted player from database: {player_to_remove_record.summoner_name}")
-        else:
-            logging.warning(f"No database record found for player to remove: {player_to_remove['summonerName']}")
-
+    # Remove the player being searched for from wherever necessary
     logging.info(f"Player to remove: {player_to_remove}")
     logging.info(f"New player added: {new_player_name}")
 
@@ -212,26 +194,16 @@ def search_player():
 @app.route('/api/players', methods=['GET'])
 def get_players():
     """
-    Retrieve all players from the database.
+    Retrieve all players from the predefined list.
     """
-    players = Player.query.all()
-    players_data = [{'id': player.id, 'summoner_name': player.summoner_name, 'last_score': player.last_score} for player in players]
+    players_data = [
+        {
+            'summoner_name': player_info['summoner_name'],
+            'tagline': player_info['tagline']
+        }
+        for player_info in PREDEFINED_PLAYERS
+    ]
     return jsonify({'players': players_data}), 200
-
-@app.route('/api/players/<int:player_id>', methods=['DELETE'])
-def delete_player(player_id):
-    """
-    Delete a player by ID.
-    """
-    player = Player.query.get(player_id)
-    if not player:
-        return jsonify({'error': 'Player not found.'}), 404
-    db.session.delete(player)
-    db.session.commit()
-    # Emit the updated queue to all connected clients
-    socketio.emit('queue_updated', {'queue': player_queue})
-    logging.info(f"Emitted 'queue_updated' event: {player_queue}")
-    return jsonify({'message': f'Player {player.summoner_name} deleted.'}), 200
 
 @app.route('/api/leaderboard', methods=['GET'])
 def get_leaderboard():
@@ -267,19 +239,23 @@ def update_leaderboard():
     """
     Updates the leaderboard by fetching new matches for each player and recalculating scores.
     """
-
     with app.app_context():
-
+        leaderboard_data = []
 
         for player_info in PREDEFINED_PLAYERS:
             summoner_name = player_info['summoner_name']
             tagline = player_info['tagline']
-            
-            # Fetch player from database or create if not exists
-            player = Player.query.filter_by(summoner_name=summoner_name, tagline=tagline).first()
-          
-        
-            puuid = player.puuid
+
+            # Fetch player PUUID
+            player_data = get_summoner_info(summoner_name, tagline, region=settings.Config.DEFAULT_REGION)
+            if not player_data:
+                logging.error(f"Player {summoner_name}#{tagline} not found.")
+                continue  # Skip to the next player
+
+            puuid = player_data.get('puuid')
+            if not puuid:
+                logging.error(f"PUUID not found for player {summoner_name}#{tagline}.")
+                continue
 
             # Fetch latest 20 matches
             match_ids = get_match_ids_by_summoner_puuid(puuid, match_count=20, region=settings.Config.DEFAULT_REGION)
@@ -287,11 +263,11 @@ def update_leaderboard():
                 logging.info(f"No matches found for {summoner_name}#{tagline}")
                 continue
 
-            existing_match_ids = {match.match_id for match in player.matches}
-            new_match_ids = [mid for mid in match_ids if mid not in existing_match_ids]
+            # Process matches
+            total_score = 0
+            match_count = 0
 
-            # Fetch and process new matches
-            for match_id in new_match_ids:
+            for match_id in match_ids:
                 match_data = get_match_data(match_id, region=settings.Config.DEFAULT_REGION)
                 if not match_data:
                     continue
@@ -309,55 +285,26 @@ def update_leaderboard():
                 # Calculate score
                 scores = calculate_scores([player_stats])
                 score_data = scores[0]
+                total_score += score_data['score']
+                match_count += 1
 
-                # Create Match entry
-                match = Match(
-                    match_id=match_id,
-                    player_id=player.id,
-                    score=score_data['score'],
-                    kills=player_stats.get('kills', 0),
-                    deaths=player_stats.get('deaths', 0),
-                    assists=player_stats.get('assists', 0),
-                    cs=player_stats.get('totalMinionsKilled', 0) + player_stats.get('neutralMinionsKilled', 0),
-                    timestamp=datetime.fromtimestamp(match_data['info']['gameEndTimestamp'] / 1000)
-                )
-                db.session.add(match)
+            average_score = total_score / match_count if match_count > 0 else 0.0
 
-            # Commit new matches to the database
-            db.session.commit()
-
-            # Remove old matches if total exceeds 20
-            player_matches = player.matches
-            if len(player_matches) > 20:
-                matches_to_delete = sorted(player_matches, key=lambda m: m.timestamp)[:-20]
-                for old_match in matches_to_delete:
-                    db.session.delete(old_match)
-                db.session.commit()
-                logging.info(f"Deleted {len(matches_to_delete)} old matches for {player.summoner_name}#{tagline}")
-
-            # Recalculate total and average score
-            player_matches = player.matches  # Refresh relationship
-            total_score = sum(match.score for match in player_matches)
-            average_score = total_score / len(player_matches) if player_matches else 0.0
-
-            player.total_score = total_score
-            player.average_score = average_score
-            player.last_updated = datetime.utcnow()
-            db.session.commit()
-
-            logging.info(f"Updated {player.summoner_name}#{tagline}: Total Score={player.total_score}, Average Score={player.average_score}")
-
-        # Update the cached leaderboard data
-        leaderboard_entries = Player.query.order_by(Player.average_score.desc()).limit(100).all()
-        leaderboard_data = [
-            {
-                'summoner_name': entry.summoner_name,
-                'tagline': entry.tagline,
-                'average_score': entry.average_score,
-                'last_updated': entry.last_updated.isoformat()
+            # Prepare leaderboard entry
+            leaderboard_entry = {
+                'summoner_name': summoner_name,
+                'tagline': tagline,
+                'average_score': average_score,
+                'last_updated': datetime.utcnow().isoformat()
             }
-            for entry in leaderboard_entries
-        ]
+            leaderboard_data.append(leaderboard_entry)
+
+            logging.info(f"Updated {summoner_name}#{tagline}: Average Score={average_score}")
+
+        # Sort the leaderboard data
+        leaderboard_data.sort(key=lambda x: x['average_score'], reverse=True)
+
+        # Cache the leaderboard data
         cache.set('leaderboard_data', leaderboard_data, timeout=300)
         logging.info("Leaderboard data updated and cached.")
 
