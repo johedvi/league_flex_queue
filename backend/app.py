@@ -264,7 +264,7 @@ def update_leaderboard():
                 puuid = player.puuid
 
             # Fetch the latest match ID
-            match_ids = get_match_ids_by_summoner_puuid(puuid, match_count=1, region=settings.Config.DEFAULT_REGION)
+            match_ids = get_match_ids_by_summoner_puuid(puuid, count=1, region=settings.Config.DEFAULT_REGION)
             if not match_ids:
                 logging.info(f"No matches found for {summoner_name}#{tagline}")
                 continue
