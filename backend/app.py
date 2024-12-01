@@ -89,7 +89,7 @@ def update_leaderboard_task():
         update_leaderboard()
 
 # Schedule the leaderboard update every 2 minutes
-scheduler.add_job(func=update_leaderboard_task, trigger="interval", minutes=5)
+scheduler.add_job(func=update_leaderboard_task, trigger="interval", minutes=2)
 
 @app.after_request
 def add_cors_headers(response):
