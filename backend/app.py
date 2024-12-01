@@ -18,6 +18,7 @@ from datetime import datetime
 from riot_api import (
     get_summoner_info,
     get_match_ids_by_summoner_puuid,
+    get_recent_match_id,
     get_match_data,
     get_player_stats_in_match,
     calculate_scores
@@ -163,12 +164,11 @@ def search_player():
         return jsonify({'error': 'PUUID not found for the player.'}), 404
 
     # Fetch recent match ID
-    match_id = get_match_ids_by_summoner_puuid(puuid, match_count=1, region=settings.Config.DEFAULT_REGION)
+    match_id = get_recent_match_id(puuid, match_count=1, region=settings.Config.DEFAULT_REGION)
     if not match_id:
         logging.error(f"No recent matches found for PUUID: {puuid}.")
         return jsonify({'error': 'No recent matches found.'}), 404
 
-    match_id = match_id[0]
 
     # Fetch team members
     match_data = get_match_data(match_id, region=settings.Config.DEFAULT_REGION)

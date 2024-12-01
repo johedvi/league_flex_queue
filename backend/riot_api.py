@@ -341,7 +341,7 @@ if __name__ == "__main__":
     ]
 
     # Create the leaderboard
-    leaderboard = create_leaderboard(player_list, match_count=20)
+    leaderboard = create_leaderboard(player_list, match_count=5)
 
     # Display the leaderboard
     print("Leaderboard:")
