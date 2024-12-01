@@ -1,8 +1,8 @@
-"""init
+"""reset
 
-Revision ID: 608a82b42d85
+Revision ID: df3a878705e4
 Revises: 
-Create Date: 2024-11-30 20:42:39.683248
+Create Date: 2024-12-01 21:29:14.975485
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '608a82b42d85'
+revision = 'df3a878705e4'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -25,11 +25,10 @@ def upgrade():
     sa.Column('puuid', sa.String(length=100), nullable=False),
     sa.Column('total_score', sa.Float(), nullable=True),
     sa.Column('average_score', sa.Float(), nullable=True),
-    sa.Column('last_score', sa.Float(), nullable=True),
+    sa.Column('last_match_id', sa.String(length=50), nullable=True),
     sa.Column('last_updated', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('puuid'),
-    sa.UniqueConstraint('summoner_name')
+    sa.UniqueConstraint('puuid')
     )
     op.create_table('matches',
     sa.Column('id', sa.Integer(), nullable=False),

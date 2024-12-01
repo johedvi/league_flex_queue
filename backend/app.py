@@ -302,9 +302,6 @@ def update_leaderboard():
             new_match_ids = new_match_ids[:5]
 
             # Process new matches
-            total_score = player.total_score * len(player.matches) if player.matches else 0
-            match_count = len(player.matches)
-
             for match_id in new_match_ids:
                 match_data = get_match_data(match_id, region=settings.Config.DEFAULT_REGION)
                 if not match_data:
@@ -324,8 +321,6 @@ def update_leaderboard():
                 scores = calculate_scores([player_stats])
                 score_data = scores[0]
                 match_score = score_data['score']
-                total_score += match_score
-                match_count += 1
 
                 # Create Match entry
                 match = Match(
@@ -349,18 +344,20 @@ def update_leaderboard():
             # Update player's last_match_id
             player.last_match_id = latest_match_id
 
-            # Remove old matches if total exceeds 20
+            # Remove old matches if total exceeds 10
             player_matches = player.matches
             if len(player_matches) > 10:
                 matches_to_delete = sorted(player_matches, key=lambda m: m.timestamp)[:-10]
                 for old_match in matches_to_delete:
-                    total_score -= old_match.score
-                    match_count -= 1
                     db.session.delete(old_match)
                 db.session.commit()
                 logging.info(f"Deleted {len(matches_to_delete)} old matches for {summoner_name}#{tagline}")
 
-            # Recalculate average score
+            # Recalculate total_score and average_score based on current matches
+            player_matches = player.matches  # Fetch updated matches after deletion
+            total_score = sum(match.score for match in player_matches)
+            match_count = len(player_matches)
+
             player.average_score = total_score / match_count if match_count > 0 else 0.0
             player.total_score = total_score
             player.last_updated = datetime.utcnow()
@@ -384,6 +381,7 @@ def update_leaderboard():
         ]
         cache.set('leaderboard_data', leaderboard_data, timeout=300)
         logging.info("Leaderboard data updated and cached.")
+
 
 # Define Socket.IO event handlers
 @socketio.on('connect')
