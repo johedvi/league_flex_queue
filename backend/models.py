@@ -1,27 +1,29 @@
+# backend/models.py
+
 from database import db
 from datetime import datetime
 
 class Player(db.Model):
     __tablename__ = 'players'
     id = db.Column(db.Integer, primary_key=True)
-    summoner_name = db.Column(db.String(80), unique=True, nullable=False)
+    summoner_name = db.Column(db.String(80), nullable=False)
     tagline = db.Column(db.String(10), nullable=False, default='')
     puuid = db.Column(db.String(100), unique=True, nullable=False, default='')
     total_score = db.Column(db.Float, default=0.0)
     average_score = db.Column(db.Float, default=0.0)
-    last_score = db.Column(db.Float, default=0.0)  # Added last_score field
+    last_match_id = db.Column(db.String(50), nullable=True)  # Added last_match_id field
     last_updated = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationship to Match model
     matches = db.relationship('Match', backref='player', lazy=True, cascade="all, delete-orphan")
 
-    def __init__(self, summoner_name, tagline='', puuid='', last_score=0.0):
+    def __init__(self, summoner_name, tagline='', puuid='', last_match_id=None):
         self.summoner_name = summoner_name
         self.tagline = tagline
         self.puuid = puuid
         self.total_score = 0.0
         self.average_score = 0.0
-        self.last_score = last_score
+        self.last_match_id = last_match_id
         self.last_updated = datetime.utcnow()
 
     def __repr__(self):

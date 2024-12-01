@@ -116,7 +116,6 @@ def get_recent_match_id(puuid, region=settings.Config.DEFAULT_REGION):
         'api_key': settings.Config.API_KEY,
         'start': 0,
         'count': 1,
-        'queue': 440  # Only fetch matches from queueId 440
     }
 
     try:
@@ -248,7 +247,7 @@ def get_player_stats_in_match(puuid, match_data):
             return participant
     return None
 
-def get_player_aggregated_score(puuid, match_count=20, region=settings.Config.DEFAULT_REGION):
+def get_player_aggregated_score(puuid, match_count=10, region=settings.Config.DEFAULT_REGION):
     """Fetches the latest matches for a player and aggregates their scores."""
     match_ids = get_match_ids_by_summoner_puuid(puuid, match_count=match_count, region=region)
     if not match_ids:
