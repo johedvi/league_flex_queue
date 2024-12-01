@@ -176,7 +176,7 @@ def search_player():
         logging.error(f"Unable to retrieve match data for match ID: {match_id}.")
         return jsonify({'error': 'Unable to retrieve match data.'}), 404
 
-    team_members = get_player_stats_in_match(puuid, match_data)
+    team_members = get_player_stats_in_match(puuid, match_data, team_only=True)
     if not team_members:
         logging.error(f"Unable to retrieve team members for match ID: {match_id}.")
         return jsonify({'error': 'Unable to retrieve team members.'}), 404
@@ -277,7 +277,7 @@ def update_leaderboard():
                 continue  # Skip to the next player
 
             # Fetch new matches since the last processed match
-            all_match_ids = get_match_ids_by_summoner_puuid(puuid, count=10, region=settings.Config.DEFAULT_REGION)
+            all_match_ids = get_match_ids_by_summoner_puuid(puuid, start=0, count=10, region=settings.Config.DEFAULT_REGION)
             if not all_match_ids:
                 logging.info(f"No matches found for {summoner_name}#{tagline}")
                 continue

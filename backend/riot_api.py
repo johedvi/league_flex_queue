@@ -3,7 +3,10 @@ import settings
 import requests
 import math
 import time
-from urllib.parse import urlencode
+import logging
+
+# Initialize logging
+logging.basicConfig(level=logging.INFO)
 
 class RateLimiter:
     def __init__(self, max_requests, period):
@@ -30,13 +33,14 @@ short_term_limiter = RateLimiter(max_requests=20, period=1)      # 20 requests p
 long_term_limiter = RateLimiter(max_requests=100, period=120)    # 100 requests per 120 seconds
 
 def rate_limited_request(url, params, retries=3):
+    headers = {'X-Riot-Token': settings.Config.API_KEY}
     for attempt in range(retries):
         try:
             # Wait if necessary
             short_term_limiter.wait()
             long_term_limiter.wait()
             # Make the request
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, headers=headers)
             response.raise_for_status()
             return response
         except requests.exceptions.HTTPError as e:
@@ -59,7 +63,7 @@ def get_summoner_info(summoner_name=None, summoner_tagline=None, region=settings
     if not summoner_tagline:
         summoner_tagline = input("Summoner tagline: ")
 
-    params = {'api_key': settings.Config.API_KEY}
+    params = {}
     api_url = f"https://{region}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{summoner_name}/{summoner_tagline}"
 
     try:
@@ -71,11 +75,11 @@ def get_summoner_info(summoner_name=None, summoner_tagline=None, region=settings
         print(f'Issue getting summoner data from API: {e}')
         return None
 
-def get_match_ids_by_summoner_puuid(summoner_puuid, match_count=1, region=settings.Config.DEFAULT_REGION):
+def get_match_ids_by_summoner_puuid(summoner_puuid, start=0, count=10, queue=440, region=settings.Config.DEFAULT_REGION):
     params = {
-        'api_key': settings.Config.API_KEY,
-        'count': match_count,
-        'queue': 440  # Only fetch matches from queueId 440 (Flex Ranked 5v5)
+        'start': start,
+        'count': count,
+        'queue': queue  # Only fetch matches from queueId 440 (Flex Ranked 5v5)
     }
     api_url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/by-puuid/{summoner_puuid}/ids"
 
@@ -89,7 +93,7 @@ def get_match_ids_by_summoner_puuid(summoner_puuid, match_count=1, region=settin
         return None
 
 def did_player_win_match(summoner_puuid, match_id, region=settings.Config.DEFAULT_REGION):
-    params = {'api_key': settings.Config.API_KEY}
+    params = {}
     api_url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/{match_id}"
 
     try:
@@ -113,7 +117,6 @@ def get_recent_match_id(puuid, region=settings.Config.DEFAULT_REGION):
     """Fetches the most recent match ID for the given PUUID."""
     api_url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
     params = {
-        'api_key': settings.Config.API_KEY,
         'start': 0,
         'count': 1,
     }
@@ -132,7 +135,7 @@ def get_recent_match_id(puuid, region=settings.Config.DEFAULT_REGION):
 def get_team_members(puuid, match_id, region=settings.Config.DEFAULT_REGION):
     """Gets all team members for the given match."""
     api_url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/{match_id}"
-    params = {'api_key': settings.Config.API_KEY}
+    params = {}
 
     try:
         response = rate_limited_request(api_url, params)
@@ -222,13 +225,12 @@ def calculate_scores(team_members):
 
     return match_scores
 
-
 # New methods
 
 def get_match_data(match_id, region=settings.Config.DEFAULT_REGION):
     """Fetches match data given a match ID."""
     api_url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/{match_id}"
-    params = {'api_key': settings.Config.API_KEY}
+    params = {}
 
     try:
         response = rate_limited_request(api_url, params)
@@ -239,17 +241,31 @@ def get_match_data(match_id, region=settings.Config.DEFAULT_REGION):
         print(f'Issue fetching match data: {e}')
         return None
 
-def get_player_stats_in_match(puuid, match_data):
+def get_player_stats_in_match(puuid, match_data, team_only=False):
     """Extracts player's performance stats from match data."""
     participants = match_data['info']['participants']
+    player_stats = None
+    player_team_id = None
+
     for participant in participants:
         if participant['puuid'] == puuid:
-            return participant
-    return None
+            player_stats = participant
+            player_team_id = participant.get('teamId')
+            break
+
+    if player_stats is None:
+        logging.error("Player stats not found in match data.")
+        return None
+
+    if team_only:
+        team_members = [p for p in participants if p.get('teamId') == player_team_id]
+        return team_members
+    else:
+        return player_stats
 
 def get_player_aggregated_score(puuid, match_count=10, region=settings.Config.DEFAULT_REGION):
     """Fetches the latest matches for a player and aggregates their scores."""
-    match_ids = get_match_ids_by_summoner_puuid(puuid, match_count=match_count, region=region)
+    match_ids = get_match_ids_by_summoner_puuid(puuid, count=match_count, region=region)
     if not match_ids:
         print(f"No matches found for PUUID {puuid}")
         return 0
