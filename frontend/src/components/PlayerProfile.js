@@ -35,7 +35,7 @@ function PlayerProfile() {
 
   return (
     <div className="player-profile">
-      <h2>(Snitt 20 senaste flex games)</h2>
+      <h2>(Snitt 10 senaste flex games)</h2>
       <ul>
         {leaderboardData.map((player, index) => (
           <li key={player.puuid}>

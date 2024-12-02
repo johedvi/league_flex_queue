@@ -298,7 +298,7 @@ def get_player_aggregated_score(puuid, match_count=10, region=settings.Config.DE
     print(f"Processed {processed_matches} matches for PUUID {puuid}")
     return round(average_score, 2)
 
-def create_leaderboard(player_list, match_count=5, region=settings.Config.DEFAULT_REGION):
+def create_leaderboard(player_list, match_count=10, region=settings.Config.DEFAULT_REGION):
     """Creates a leaderboard by aggregating scores for a list of players.
 
     player_list: list of tuples (summoner_name, summoner_tagline)
@@ -337,11 +337,12 @@ if __name__ == "__main__":
     player_list = [
         ('bigbrainburton', 'EUNE'),
         ('lil newton', 'EUNE'),
+        ('mysman', 'EUNE')
         # Add more players as needed
     ]
 
     # Create the leaderboard
-    leaderboard = create_leaderboard(player_list, match_count=5)
+    leaderboard = create_leaderboard(player_list, match_count=10)
 
     # Display the leaderboard
     print("Leaderboard:")

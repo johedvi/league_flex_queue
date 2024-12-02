@@ -299,7 +299,7 @@ def update_leaderboard():
                 continue
 
             # Limit the number of new matches to process (e.g., max 5)
-            new_match_ids = new_match_ids[:5]
+            new_match_ids = new_match_ids[:10]
 
             # Process new matches
             for match_id in new_match_ids:
@@ -338,7 +338,7 @@ def update_leaderboard():
                 # Introduce delay between API calls to respect rate limits
                 time.sleep(1.2)
 
-            # Commit new matches to the database
+            # Commit new matches to the database    
             db.session.commit()
 
             # Update player's last_match_id
