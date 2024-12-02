@@ -269,7 +269,7 @@ def update_leaderboard():
                 logging.info(f"No matches found for {summoner_name}#{tagline}")
                 continue
 
-            latest_match_id = match_ids[0]
+           
 
             # Check if the latest match is already processed
            # if player.last_match_id == latest_match_id:
@@ -342,7 +342,7 @@ def update_leaderboard():
             db.session.commit()
 
             # Update player's last_match_id
-            player.last_match_id = latest_match_id
+            #player.last_match_id = latest_match_id
 
             # Remove old matches if total exceeds 10
             player_matches = player.matches
