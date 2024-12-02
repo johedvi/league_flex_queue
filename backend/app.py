@@ -269,12 +269,12 @@ def update_leaderboard():
                 logging.info(f"No matches found for {summoner_name}#{tagline}")
                 continue
 
-           
+            latest_match_id = match_ids[0]
 
             # Check if the latest match is already processed
-           # if player.last_match_id == latest_match_id:
-            #    logging.info(f"No new matches for {summoner_name}#{tagline}")
-             #   continue  # Skip to the next player
+            if player.last_match_id == latest_match_id:
+                logging.info(f"No new matches for {summoner_name}#{tagline}")
+                continue  # Skip to the next player
 
             # Fetch new matches since the last processed match
             all_match_ids = get_match_ids_by_summoner_puuid(puuid, start=0, count=10, region=settings.Config.DEFAULT_REGION)
@@ -342,7 +342,7 @@ def update_leaderboard():
             db.session.commit()
 
             # Update player's last_match_id
-            #player.last_match_id = latest_match_id
+            player.last_match_id = latest_match_id
 
             # Remove old matches if total exceeds 10
             player_matches = player.matches
