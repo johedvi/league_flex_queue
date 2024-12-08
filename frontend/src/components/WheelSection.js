@@ -28,7 +28,6 @@ const WheelSection = () => {
     drawWheel();
     // Cleanup on unmount
     return () => clearTimeout(spinTimeout.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [segments, colors]);
 
   const addName = () => {
@@ -41,6 +40,13 @@ const WheelSection = () => {
     }
   };
 
+  const clearSegments = () => {
+    setSegments([]);
+    setColors([]);
+    setResult(''); // Clear any result message
+    startAngle.current = 0; // Reset the wheel angle if desired
+  };
+
   const drawWheel = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -49,7 +55,7 @@ const WheelSection = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (numSegments === 0) {
-      // Draw default wheel
+      // Draw default wheel if no segments
       const defaultColor = '#cccccc';
       ctx.fillStyle = defaultColor;
       ctx.beginPath();
@@ -80,7 +86,14 @@ const WheelSection = () => {
       ctx.fillStyle = colors[i] || getUniqueColor(i, numSegments);
       ctx.beginPath();
       ctx.moveTo(canvas.width / 2, canvas.height / 2);
-      ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2 - 5, angle, angle + arc.current, false);
+      ctx.arc(
+        canvas.width / 2,
+        canvas.height / 2,
+        canvas.width / 2 - 5,
+        angle,
+        angle + arc.current,
+        false
+      );
       ctx.lineTo(canvas.width / 2, canvas.height / 2);
       ctx.fill();
     }
@@ -168,6 +181,7 @@ const WheelSection = () => {
           placeholder="Enter name"
         />
         <button onClick={addName}>Add</button>
+        <button onClick={clearSegments}>Clear</button> {/* The new Clear button */}
       </div>
       <button onClick={spin}>Spin the Wheel!</button>
       <div className="nameList">
