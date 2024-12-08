@@ -161,20 +161,6 @@ def get_team_members(puuid, match_id, region=settings.Config.DEFAULT_REGION):
     team_members = [p for p in participants if p['teamId'] == team_id]
     return team_members
 
-def calculate_scores_v1(team_members):
-    """Calculates individual scores for a team based on match performance."""
-    scores = []
-    for member in team_members:
-        kills = member.get('kills', 0)
-        deaths = member.get('deaths', 0)
-        assists = member.get('assists', 0)
-        cs = member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0)
-
-        # Example scoring formula
-        score = (kills * 2 + assists - deaths * 1.5 + cs * 0.1)
-        scores.append({'summonerName': member.get('summonerName', 'Unknown'), 'score': score})
-
-    return scores
 
 def calculate_scores(team_members):
     """Calculates individual scores for a team based on match performance."""
@@ -205,10 +191,8 @@ def calculate_scores(team_members):
             w['cs'] * scaled_cs
         )
 
-        if is_lil_newton:
-            adjusted_score = base_score - 3
-        else:
-            adjusted_score = base_score
+       
+        adjusted_score = base_score
 
         rounded_score = round(adjusted_score, 2)
 
