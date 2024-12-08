@@ -299,7 +299,7 @@ def update_leaderboard():
                 continue
 
             # Limit the number of new matches to process (e.g., max 5)
-            new_match_ids = new_match_ids[:5] # Change if API requests grow too large
+            new_match_ids = new_match_ids[:10] # Change if API requests grow too large
 
             # Process new matches
             for match_id in new_match_ids:
