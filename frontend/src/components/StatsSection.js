@@ -16,8 +16,12 @@ const StatsSection = () => {
 
   return (
     <div className="container">
+      {/* Add your explanatory text here */}
+      <p style={{ textAlign: 'center', color: '#fff', marginBottom: '20px' }}>
+        Senaste 10 Flex Ranked games
+      </p>
+      
       <div className="grid-container">
-        
         {/* Most Kills */}
         <div className="grid-item">
           <div className="stats-section">
@@ -73,7 +77,6 @@ const StatsSection = () => {
             </ol>
           </div>
         </div>
-        
       </div>
     </div>
   );
