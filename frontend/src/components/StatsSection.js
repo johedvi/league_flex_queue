@@ -6,7 +6,7 @@ const StatsSection = () => {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    fetch('https://api.blackultras.com/stats')
+    fetch('https://api.blackultras.com/api/stats')
       .then(response => response.json())
       .then(data => setStats(data))
       .catch(err => console.error('Failed to fetch stats:', err));
