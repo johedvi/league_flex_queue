@@ -1,0 +1,38 @@
+.stats-section {
+    width: 60%;
+    min-width: 280px;
+    margin: 10px;
+    background-color: #2b2b2b; /* Dark gray background to match */
+    padding: 15px;
+    box-shadow: 0 4px 10px rgba(255, 0, 0, 0.3); /* Red glow shadow */
+    border-radius: 8px; /* Rounded corners */
+    box-sizing: border-box;
+    margin: 0 auto; /* This centers the element horizontally */
+
+  }
+
+
+  .stats-section h2 {
+    color: #ff0000; /* Bright red header */
+    text-align: center;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+  }
+  
+  .ranking-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .ranking-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #555; /* Dark line */
+    font-size: 16px;
+    color: #fff; /* White text for items */
+  }
+  
+  .ranking-item:last-child {
+    border-bottom: none;
+  }
+  

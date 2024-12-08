@@ -14,6 +14,7 @@ from flask_socketio import SocketIO
 from flask_migrate import Migrate  # Import Flask-Migrate
 import logging
 from datetime import datetime
+from sqlalchemy import func
 
 from riot_api import (
     get_summoner_info,
@@ -381,6 +382,60 @@ def update_leaderboard():
         ]
         cache.set('leaderboard_data', leaderboard_data, timeout=300)
         logging.info("Leaderboard data updated and cached.")
+
+
+
+@app.route('/api/stats', methods=['GET'])
+def get_stats():
+    # Query for kills, returning all players sorted by total kills desc
+    kills_query = db.session.query(Player, func.sum(Match.kills).label('total_kills')) \
+        .join(Match, Match.player_id == Player.id) \
+        .group_by(Player.id) \
+        .order_by(func.sum(Match.kills).desc()) \
+        .all()
+
+    # Query for deaths
+    deaths_query = db.session.query(Player, func.sum(Match.deaths).label('total_deaths')) \
+        .join(Match, Match.player_id == Player.id) \
+        .group_by(Player.id) \
+        .order_by(func.sum(Match.deaths).desc()) \
+        .all()
+
+    # Query for assists
+    assists_query = db.session.query(Player, func.sum(Match.assists).label('total_assists')) \
+        .join(Match, Match.player_id == Player.id) \
+        .group_by(Player.id) \
+        .order_by(func.sum(Match.assists).desc()) \
+        .all()
+
+    # Query for CS
+    cs_query = db.session.query(Player, func.sum(Match.cs).label('total_cs')) \
+        .join(Match, Match.player_id == Player.id) \
+        .group_by(Player.id) \
+        .order_by(func.sum(Match.cs).desc()) \
+        .all()
+
+    # Helper function to format query results
+    def format_results(query_results, value_key):
+        # query_results is a list of tuples: (Player, value)
+        # value_key is a string like 'total_kills'
+        return [
+            {
+                'summoner_name': r[0].summoner_name,
+                'tagline': r[0].tagline,
+                'value': getattr(r, value_key)
+            }
+            for r in query_results
+        ]
+
+    response = {
+        'most_kills': format_results(kills_query, 'total_kills'),
+        'most_deaths': format_results(deaths_query, 'total_deaths'),
+        'most_assists': format_results(assists_query, 'total_assists'),
+        'most_cs': format_results(cs_query, 'total_cs')
+    }
+
+    return jsonify(response), 200
 
 
 # Define Socket.IO event handlers

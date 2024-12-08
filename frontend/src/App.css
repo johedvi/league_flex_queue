@@ -56,3 +56,34 @@ h1, h2, h3 {
     grid-template-columns: 1fr; /* One column layout on small screens */
   }
 }
+
+/* Header Styles */
+.header {
+  background-color: #000; /* Black background to match the page */
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the navigation horizontally */
+  margin-bottom: 20px; /* Space below header */
+}
+
+.header nav {
+  display: flex;
+  gap: 10px; /* Space between buttons/links */
+}
+
+.header a {
+  color: #ff0000; /* Red text, consistent with headers */
+  text-decoration: none;
+  font-weight: bold;
+  text-transform: uppercase; /* Match the styling of headers */
+  border: 1px solid #ff0000; /* Reflecting the component borders */
+  padding: 8px 12px;
+  background-color: #1a1a1a; /* Dark grey background similar to components */
+  transition: background-color 0.3s ease;
+}
+
+.header a:hover {
+  background-color: #cc0000; /* Darker red on hover */
+  color: #fff; /* White text on hover for contrast */
+}

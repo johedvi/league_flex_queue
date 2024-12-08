@@ -48,7 +48,7 @@ canvas {
     justify-content: center; /* Horizontally center the input and button */
     align-items: center; /* Vertically align input and button */
     gap: 10px; /* Add space between the input and button */
-    margin-top: 20px; /* Add space above the input field */
+    margin-top: 10px; /* Add space above the input field */
 }
 
 .nameInput input {
