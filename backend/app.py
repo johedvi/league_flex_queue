@@ -319,7 +319,7 @@ def update_leaderboard():
                     continue
 
                 # Calculate score
-                scores = calculate_scores([player_stats])
+                scores = calculate_scores([player_stats], match_data)
                 score_data = scores[0]
                 match_score = score_data['score']
 
