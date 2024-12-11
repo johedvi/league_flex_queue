@@ -183,7 +183,7 @@ def search_player():
         return jsonify({'error': 'Unable to retrieve team members.'}), 404
 
     # Calculate scores
-    scores = calculate_scores(team_members)
+    scores = calculate_scores(team_members, match_data)
 
     # Identify the player with the lowest score
     scores_sorted = sorted(scores, key=lambda x: x['score'])
