@@ -8,6 +8,17 @@ import logging
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
 
+ROLE_WEIGHTS = {
+    'Top': {'kills': 4, 'deaths': -2, 'assists': 2, 'cs': 2.5, 'visionScore': 1.5},
+    'Mid': {'kills': 5, 'deaths': -2, 'assists': 2, 'cs': 2, 'visionScore': 1},
+    'Jungle': {'kills': 4, 'deaths': -2, 'assists': 2, 'cs': 2, 'visionScore': 2},
+    'ADC': {'kills': 5, 'deaths': -2, 'assists': 1, 'cs': 3, 'visionScore': 1},
+    'Support': {'kills': 1, 'deaths': -1, 'assists': 5, 'cs': 0.5, 'visionScore': 4.5},
+    'Undefined': {'kills': 4, 'deaths': -2, 'assists': 2, 'cs': 2, 'visionScore': 1}
+}
+
+AGGRESSIVE_SUPPORTS = ["Pyke","Malphite","Brand", "Senna","Xerath","Lux","Vel'koz","Camille","Pantheon","Singed","Hwei","Teemo","Shaco","Swain"]
+
 class RateLimiter:
     def __init__(self, max_requests, period):
         self.max_requests = max_requests  # Maximum requests allowed
@@ -162,49 +173,91 @@ def get_team_members(puuid, match_id, region=settings.Config.DEFAULT_REGION):
     return team_members
 
 
+def get_support_weights(champion_name):
+    """Adjust support weights dynamically based on champion playstyle."""
+    if champion_name in AGGRESSIVE_SUPPORTS:
+        return {'kills': 3, 'deaths': -2, 'assists': 3, 'cs': 0.5, 'visionScore': 3.5}
+    else:
+        return {'kills': 1, 'deaths': -1, 'assists': 5, 'cs': 0.5, 'visionScore': 4.5}
+
+def get_role_weights(role, champion_name=None):
+    """Fetch weights for a given role, with dynamic support adjustments."""
+    if role == 'Support' and champion_name:
+        return get_support_weights(champion_name)
+    return ROLE_WEIGHTS.get(role, ROLE_WEIGHTS['Undefined'])
+
+def assign_roles_by_team_position(team_members):
+    """Assign roles using the teamPosition field from the Riot API."""
+    for member in team_members:
+        # Use the teamPosition field directly
+        team_position = member.get('teamPosition', 'UNKNOWN')
+
+        # Map teamPosition to a human-readable role
+        if team_position == "TOP":
+            member['assignedRole'] = "Top"
+        elif team_position == "JUNGLE":
+            member['assignedRole'] = "Jungle"
+        elif team_position == "MIDDLE":
+            member['assignedRole'] = "Mid"
+        elif team_position == "BOTTOM":
+            member['assignedRole'] = "ADC"
+        elif team_position == "UTILITY":
+            member['assignedRole'] = "Support"
+        else:
+            member['assignedRole'] = "Undefined"  # Handle edge cases
+
+    return team_members
+
 def calculate_scores(team_members):
-    """Calculates individual scores for a team based on match performance."""
+    """Calculates individual scores for a team based on assigned roles."""
+    import math
     match_scores = []
-    w = {'kills': 4, 'deaths': -2, 'assists': 2, 'cs': 2}
-    target_name = 'lil newton'  # Lowercase target name for comparison
+
+    # Assign roles to team members using teamPosition
+    team_members = assign_roles_by_team_position(team_members)
 
     for member in team_members:
-        summoner_name = member.get('summonerName', 'Unknown')
-        is_lil_newton = summoner_name.lower() == target_name
+        # Retrieve assigned role and weights
+        role = member.get('assignedRole', 'Undefined')
+        champion_name = member.get('championName', None)  # Optional: Fetch champion name
+        weights = get_role_weights(role, champion_name)
 
+        # Fetch performance metrics
         kills = member.get('kills', 0)
         deaths = member.get('deaths', 0)
         assists = member.get('assists', 0)
-        cs = member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0)
+        cs = member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0)  # Calculate CS
+        vision_score = member.get('visionScore', 0)
 
-        # Apply scaling
-        scaled_kills = math.erf(1/10 * kills)
-        scaled_deaths = math.erf(1/10 * deaths)
-        scaled_assists = math.erf(1/10 * assists)
-        scaled_cs = math.erf(1/200 * cs)
+        # Apply scaling to metrics
+        scaled_kills = math.erf(1 / 10 * kills)
+        scaled_deaths = math.erf(1 / 10 * deaths)
+        scaled_assists = math.erf(1 / 10 * assists)
+        scaled_cs = math.erf(1 / 200 * cs)
+        scaled_vision = math.erf(1 / 50 * vision_score)
 
-        # Calculate the score
+        # Calculate the score using role-specific weights
         base_score = (
-            w['kills'] * scaled_kills +
-            w['assists'] * scaled_assists +
-            w['deaths'] * scaled_deaths +
-            w['cs'] * scaled_cs
+            weights['kills'] * scaled_kills +
+            weights['deaths'] * scaled_deaths +
+            weights['assists'] * scaled_assists +
+            weights['cs'] * scaled_cs +
+            weights['visionScore'] * scaled_vision
         )
 
-       
-        adjusted_score = base_score
+        # Round the score to 2 decimal places
+        rounded_score = round(base_score, 2)
 
-        rounded_score = round(adjusted_score, 2)
-
+        # Append the calculated score with details
         match_scores.append({
-            'summonerName': summoner_name,
+            'summonerName': member.get('summonerName', 'Unknown'),
+            'role': role,
             'score': rounded_score,
             'kills': kills,
             'deaths': deaths,
             'assists': assists,
             'cs': cs,
-            'matchId': member.get('matchId'),
-            'timestamp': member.get('timestamp')
+            'visionScore': vision_score
         })
 
     return match_scores
@@ -318,17 +371,32 @@ def create_leaderboard(player_list, match_count=10, region=settings.Config.DEFAU
 # Example usage:
 if __name__ == "__main__":
     # List of player names and taglines to include in the leaderboard
-    player_list = [
-        ('bigbrainburton', 'EUNE'),
-        ('lil newton', 'EUNE'),
-        ('mysman', 'EUNE')
-        # Add more players as needed
-    ]
+    """
+    Search for a player and calculate team scores.
+    """
+    summoner_name = 'optimus d snutz'
+    summoner_tagline = '6969'
 
-    # Create the leaderboard
-    leaderboard = create_leaderboard(player_list, match_count=10)
+    # Fetch player PUUID
+    player_info = get_summoner_info(summoner_name, summoner_tagline, region=settings.Config.DEFAULT_REGION)
 
-    # Display the leaderboard
-    print("Leaderboard:")
-    for rank, entry in enumerate(leaderboard, start=1):
-        print(f"{rank}. {entry['summonerName']}: {entry['totalScore']} points")
+    puuid = player_info.get('puuid')
+
+    # Fetch recent match ID
+    match_id = get_recent_match_id(puuid, region=settings.Config.DEFAULT_REGION)
+
+    # Fetch team members
+    match_data = get_match_data(match_id, region=settings.Config.DEFAULT_REGION)
+
+    team_members = get_player_stats_in_match(puuid, match_data, team_only=True)
+
+    # Calculate scores
+    scores = calculate_scores(team_members)
+
+    # Identify the player with the lowest score
+    scores_sorted = sorted(scores, key=lambda x: x['score'])
+    player_to_remove = scores_sorted[0] if scores_sorted else None
+
+    print(scores_sorted)
+
+
