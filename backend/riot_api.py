@@ -9,12 +9,12 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 ROLE_WEIGHTS = {
-    'Top': {'kills': 4, 'deaths': -2, 'assists': 2, 'cs': 2.5, 'visionScore': 1.5},
-    'Mid': {'kills': 5, 'deaths': -2, 'assists': 2, 'cs': 2, 'visionScore': 1},
-    'Jungle': {'kills': 4, 'deaths': -2, 'assists': 2, 'cs': 2, 'visionScore': 2},
-    'ADC': {'kills': 5, 'deaths': -2, 'assists': 1, 'cs': 3, 'visionScore': 1},
-    'Support': {'kills': 1, 'deaths': -1, 'assists': 5, 'cs': 0.5, 'visionScore': 4.5},
-    'Undefined': {'kills': 4, 'deaths': -2, 'assists': 2, 'cs': 2, 'visionScore': 1}
+    'Top': {'kills': 3, 'deaths': -2.5, 'assists': 1, 'csPerMin': 2.5, 'visionScore': 0.5,'totalDamage': 3},
+    'Mid': {'kills': 2.5, 'deaths': -2, 'assists': 1.5, 'csPerMin': 2, 'visionScore': 1,'totalDamage': 3},
+    'Jungle': {'kills': 2, 'deaths': -2, 'assists': 2, 'csPerMin': 2, 'visionScore': 1.5,'totalDamage': 2.5},
+    'ADC': {'kills': 3.5, 'deaths': -3, 'assists': 0.5, 'csPerMin': 2.5, 'visionScore': 0.5,'totalDamage': 3},
+    'Support': {'kills': 1, 'deaths': -1, 'assists': 4.5, 'csPerMin': 0.5, 'visionScore': 3,'totalDamage': 1},
+    'Undefined': {'kills': 4, 'deaths': -2, 'assists': 2, 'csPerMin': 2, 'visionScore': 1,'totalDamage': 3}
 }
 
 AGGRESSIVE_SUPPORTS = ["Pyke","Malphite","Brand", "Senna","Xerath","Lux","Vel'koz","Camille","Pantheon","Singed","Hwei","Teemo","Shaco","Swain"]
@@ -176,9 +176,9 @@ def get_team_members(puuid, match_id, region=settings.Config.DEFAULT_REGION):
 def get_support_weights(champion_name):
     """Adjust support weights dynamically based on champion playstyle."""
     if champion_name in AGGRESSIVE_SUPPORTS:
-        return {'kills': 3, 'deaths': -2, 'assists': 3, 'cs': 0.5, 'visionScore': 3.5}
+        return {'kills': 3, 'deaths': -1, 'assists': 2.5, 'csPerMin': 0.5, 'visionScore': 3,'totalDamage': 1}
     else:
-        return {'kills': 1, 'deaths': -1, 'assists': 5, 'cs': 0.5, 'visionScore': 4.5}
+        return {'kills': 1, 'deaths': -1, 'assists': 4.5, 'csPerMin': 0.5, 'visionScore': 3,'totalDamage': 1}
 
 def get_role_weights(role, champion_name=None):
     """Fetch weights for a given role, with dynamic support adjustments."""
@@ -228,21 +228,30 @@ def calculate_scores(team_members):
         assists = member.get('assists', 0)
         cs = member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0)  # Calculate CS
         vision_score = member.get('visionScore', 0)
+        total_damage = member.get('totalDamageDealtToChampions', 0)
+
+        game_duration = match_data['info'].get('gameDuration', 0)
+        game_duration = game_duration/60
+        cs_per_min = cs/game_duration
+
 
         # Apply scaling to metrics
-        scaled_kills = math.erf(1 / 10 * kills)
-        scaled_deaths = math.erf(1 / 10 * deaths)
-        scaled_assists = math.erf(1 / 10 * assists)
-        scaled_cs = math.erf(1 / 200 * cs)
-        scaled_vision = math.erf(1 / 50 * vision_score)
+        scaled_kills = math.erf(30 / (10 * game_duration) * kills)
+        scaled_deaths = math.erf(30 / (10 * game_duration) * deaths)
+        scaled_assists = math.erf(30 / (10 * game_duration) * assists)
+        scaled_cs_min = math.erf(1 / 5 * cs_per_min) 
+        scaled_vision = math.erf(30 / (50 * game_duration) * vision_score)
+        scaled_total_damage = math.erf(30 / (30000 * game_duration) * total_damage)
+
 
         # Calculate the score using role-specific weights
         base_score = (
             weights['kills'] * scaled_kills +
             weights['deaths'] * scaled_deaths +
             weights['assists'] * scaled_assists +
-            weights['cs'] * scaled_cs +
-            weights['visionScore'] * scaled_vision
+            weights['csPerMin'] * scaled_cs_min +
+            weights['visionScore'] * scaled_vision +
+            weights['totalDamage'] * scaled_total_damage
         )
 
         # Round the score to 2 decimal places
@@ -256,8 +265,9 @@ def calculate_scores(team_members):
             'kills': kills,
             'deaths': deaths,
             'assists': assists,
-            'cs': cs,
-            'visionScore': vision_score
+            'csPerMin': round(cs_per_min, 2),
+            'visionScore': vision_score,
+            'totalDamage': round(total_damage, 2)
         })
 
     return match_scores
@@ -374,8 +384,8 @@ if __name__ == "__main__":
     """
     Search for a player and calculate team scores.
     """
-    summoner_name = 'optimus d snutz'
-    summoner_tagline = '6969'
+    summoner_name = 'bajveck'
+    summoner_tagline = 'EUNE'
 
     # Fetch player PUUID
     player_info = get_summoner_info(summoner_name, summoner_tagline, region=settings.Config.DEFAULT_REGION)
@@ -397,6 +407,10 @@ if __name__ == "__main__":
     scores_sorted = sorted(scores, key=lambda x: x['score'])
     player_to_remove = scores_sorted[0] if scores_sorted else None
 
-    print(scores_sorted)
+for score in scores_sorted:
+    print(score)
+    print()
+
+
 
 
