@@ -407,10 +407,6 @@ if __name__ == "__main__":
     scores_sorted = sorted(scores, key=lambda x: x['score'])
     player_to_remove = scores_sorted[0] if scores_sorted else None
 
-for score in scores_sorted:
-    print(score)
-    print()
-
 
 
 
