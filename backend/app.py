@@ -67,6 +67,8 @@ PREDEFINED_PLAYERS = [
     {'summoner_name': 'jonteproo', 'tagline': 'EUNE'},
     {'summoner_name': 'stiga12', 'tagline': 'EUNE'},
     {'summoner_name': 'lHgXRudolf', 'tagline': 'EUNE'},
+    {'summoner_name': 'gurkch', 'tagline': 'EUNE'},
+
     # Add more players as needed
 ]
 
