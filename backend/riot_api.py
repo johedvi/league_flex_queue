@@ -421,8 +421,3 @@ if __name__ == "__main__":
     # Identify the player with the lowest score
     scores_sorted = sorted(scores, key=lambda x: x['score'])
     player_to_remove = scores_sorted[0] if scores_sorted else None
-
-for score in scores_sorted:
-    print(score)
-    print()
-
