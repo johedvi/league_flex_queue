@@ -8,13 +8,14 @@ import logging
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
 
+
 ROLE_WEIGHTS = {
-    'Top': {'kills': 3, 'deaths': -2.5, 'assists': 1, 'csPerMin': 2.5, 'visionScore': 0.5,'totalDamage': 3},
-    'Mid': {'kills': 2.5, 'deaths': -2, 'assists': 1.5, 'csPerMin': 2, 'visionScore': 1,'totalDamage': 3},
-    'Jungle': {'kills': 2, 'deaths': -2, 'assists': 2, 'csPerMin': 2, 'visionScore': 1.5,'totalDamage': 2.5},
-    'ADC': {'kills': 3.5, 'deaths': -3, 'assists': 0.5, 'csPerMin': 2.5, 'visionScore': 0.5,'totalDamage': 3},
-    'Support': {'kills': 1, 'deaths': -1, 'assists': 4.5, 'csPerMin': 0.5, 'visionScore': 3,'totalDamage': 1},
-    'Undefined': {'kills': 4, 'deaths': -2, 'assists': 2, 'csPerMin': 2, 'visionScore': 1,'totalDamage': 3}
+    'Top': {'kills': 2.5, 'deaths': -2.5, 'assists': 0.5, 'csPerMin': 2, 'visionScore': 0.5,'totalDamage': 2, 'killParticipation': 1, 'damageSelfMitigated': 1, 'damageDealtToTurrets': 1},
+    'Mid': {'kills': 2, 'deaths': -2, 'assists': 0.75, 'csPerMin': 1.5, 'visionScore': 0.75,'totalDamage': 2, 'killParticipation': 2, 'damageSelfMitigated': 0.5, 'damageDealtToTurrets': 0.5},
+    'Jungle': {'kills': 1.5, 'deaths': -2, 'assists': 1.5, 'csPerMin': 1, 'visionScore': 1.5,'totalDamage': 1.5, 'killParticipation': 2, 'damageSelfMitigated': 0.75, 'damageDealtToTurrets': 0.25},
+    'ADC': {'kills': 2.5, 'deaths': -3, 'assists': 0.5, 'csPerMin': 2, 'visionScore': 0.25,'totalDamage': 2, 'killParticipation': 1.5, 'damageSelfMitigated': 0.25, 'damageDealtToTurrets': 1},
+    'Support': {'kills': 1, 'deaths': -1.5, 'assists': 3, 'csPerMin': 0.25, 'visionScore': 2,'totalDamage': 1, 'killParticipation': 2, 'damageSelfMitigated': 0.5, 'damageDealtToTurrets': 0.25},
+    'Undefined': {'kills': 4, 'deaths': -2, 'assists': 2, 'csPerMin': 2, 'visionScore': 1,'totalDamage': 3, 'killParticipation': 0, 'damageSelfMitigated': 0, 'damageDealtToTurrets': 0}
 }
 
 AGGRESSIVE_SUPPORTS = ["Pyke","Malphite","Brand", "Senna","Xerath","Lux","Vel'koz","Camille","Pantheon","Singed","Hwei","Teemo","Shaco","Swain"]
@@ -176,15 +177,18 @@ def get_team_members(puuid, match_id, region=settings.Config.DEFAULT_REGION):
 def get_support_weights(champion_name):
     """Adjust support weights dynamically based on champion playstyle."""
     if champion_name in AGGRESSIVE_SUPPORTS:
-        return {'kills': 3, 'deaths': -1, 'assists': 2.5, 'csPerMin': 0.5, 'visionScore': 3,'totalDamage': 1}
+        return {'kills': 2, 'deaths': -1.3, 'assists': 2, 'csPerMin': 0.25, 'visionScore': 2,'totalDamage': 1.5, 'killParticipation': 1.5, 'damageSelfMitigated': 0.5, 'damageDealtToTurrets': 0.25}
     else:
-        return {'kills': 1, 'deaths': -1, 'assists': 4.5, 'csPerMin': 0.5, 'visionScore': 3,'totalDamage': 1}
+        return {'kills': 1, 'deaths': -1.5, 'assists': 3, 'csPerMin': 0.25, 'visionScore': 2,'totalDamage': 1, 'killParticipation': 2, 'damageSelfMitigated': 0.5, 'damageDealtToTurrets': 0.25}
 
 def get_role_weights(role, champion_name=None):
-    """Fetch weights for a given role, with dynamic support adjustments."""
     if role == 'Support' and champion_name:
-        return get_support_weights(champion_name)
-    return ROLE_WEIGHTS.get(role, ROLE_WEIGHTS['Undefined'])
+        weights = get_support_weights(champion_name)
+    else:
+        weights = ROLE_WEIGHTS.get(role, ROLE_WEIGHTS['Undefined'])
+
+    return weights
+
 
 def assign_roles_by_team_position(team_members):
     """Assign roles using the teamPosition field from the Riot API."""
@@ -208,7 +212,7 @@ def assign_roles_by_team_position(team_members):
 
     return team_members
 
-def calculate_scores(team_members, match_data):
+def calculate_scores(team_members):
     """Calculates individual scores for a team based on assigned roles."""
     import math
     match_scores = []
@@ -229,11 +233,13 @@ def calculate_scores(team_members, match_data):
         cs = member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0)  # Calculate CS
         vision_score = member.get('visionScore', 0)
         total_damage = member.get('totalDamageDealtToChampions', 0)
+        kill_participation = member.get('challenges', {}).get('killParticipation', 0)
+        self_mitigated_damage = member.get('damageSelfMitigated', 0)
+        turret_damage = member.get('damageDealtToTurrets', 0)
 
         game_duration = match_data['info'].get('gameDuration', 0)
         game_duration = game_duration/60
         cs_per_min = cs/game_duration
-
 
         # Apply scaling to metrics
         scaled_kills = math.erf(30 / (10 * game_duration) * kills)
@@ -242,6 +248,8 @@ def calculate_scores(team_members, match_data):
         scaled_cs_min = math.erf(1 / 5 * cs_per_min) 
         scaled_vision = math.erf(30 / (50 * game_duration) * vision_score)
         scaled_total_damage = math.erf(30 / (30000 * game_duration) * total_damage)
+        scaled_self_mitigated_damage = math.erf(30/(25000 * game_duration) * self_mitigated_damage)
+        scaled_turret_damage = math.erf(turret_damage/6000)
 
 
         # Calculate the score using role-specific weights
@@ -251,7 +259,11 @@ def calculate_scores(team_members, match_data):
             weights['assists'] * scaled_assists +
             weights['csPerMin'] * scaled_cs_min +
             weights['visionScore'] * scaled_vision +
-            weights['totalDamage'] * scaled_total_damage
+            weights['totalDamage'] * scaled_total_damage +
+            weights['killParticipation'] * kill_participation +
+            weights['damageSelfMitigated'] * scaled_self_mitigated_damage +
+            weights['damageDealtToTurrets'] * scaled_turret_damage
+
         )
 
         # Round the score to 2 decimal places
@@ -267,7 +279,10 @@ def calculate_scores(team_members, match_data):
             'assists': assists,
             'csPerMin': round(cs_per_min, 2),
             'visionScore': vision_score,
-            'totalDamage': round(total_damage, 2)
+            'totalDamage': round(total_damage, 2),
+            'killParticipation': kill_participation,
+            'damageSelfMitigated': self_mitigated_damage,
+            'damageDealtToTurrets': turret_damage
         })
 
     return match_scores
@@ -407,6 +422,7 @@ if __name__ == "__main__":
     scores_sorted = sorted(scores, key=lambda x: x['score'])
     player_to_remove = scores_sorted[0] if scores_sorted else None
 
-
-
+for score in scores_sorted:
+    print(score)
+    print()
 
