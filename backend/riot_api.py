@@ -212,7 +212,7 @@ def assign_roles_by_team_position(team_members):
 
     return team_members
 
-def calculate_scores(team_members):
+def calculate_scores(team_members, match_data):
     """Calculates individual scores for a team based on assigned roles."""
     import math
     match_scores = []
