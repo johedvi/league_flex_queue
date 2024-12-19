@@ -326,6 +326,13 @@ def update_leaderboard():
                 score_data = scores[0]
                 match_score = score_data['score']
 
+                # Update all-time highest and lowest scores
+                if match_score > player.all_time_highest_score:
+                    player.all_time_highest_score = match_score
+
+                if player.all_time_lowest_score is None or match_score < player.all_time_lowest_score:
+                    player.all_time_lowest_score = match_score
+
                 # Create Match entry
                 match = Match(
                     match_id=match_id,
@@ -380,24 +387,18 @@ def update_leaderboard():
             matches = sorted(entry.matches, key=lambda m: m.timestamp, reverse=True)
             if len(matches) >= 10:
                 tenth_game = matches[-1]  # The 10th game (oldest among the top 10)
-                tenth_game_data = {
-                    'match_id': tenth_game.match_id,
-                    'score': tenth_game.score,
-                    'kills': tenth_game.kills,
-                    'deaths': tenth_game.deaths,
-                    'assists': tenth_game.assists,
-                    'cs': tenth_game.cs,
-                    'timestamp': tenth_game.timestamp.isoformat()
-                }
+                tenth_game_score = tenth_game.score
             else:
-                tenth_game_data = None  # If fewer than 10 games exist
+                tenth_game_score = None
 
             leaderboard_data.append({
                 'summoner_name': entry.summoner_name,
                 'tagline': entry.tagline,
                 'average_score': entry.average_score,
                 'last_updated': entry.last_updated.isoformat(),
-                'tenth_game': tenth_game_data  # Include 10th game data
+                'highest_score': entry.all_time_highest_score,
+                'lowest_score': entry.all_time_lowest_score,
+                'tenth_game_score': tenth_game_score
             })
 
         cache.set('leaderboard_data', leaderboard_data, timeout=300)

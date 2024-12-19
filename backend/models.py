@@ -1,5 +1,3 @@
-# backend/models.py
-
 from database import db
 from datetime import datetime
 
@@ -11,8 +9,10 @@ class Player(db.Model):
     puuid = db.Column(db.String(100), unique=True, nullable=False, default='')
     total_score = db.Column(db.Float, default=0.0)
     average_score = db.Column(db.Float, default=0.0)
-    last_match_id = db.Column(db.String(50), nullable=True)  # Added last_match_id field
+    last_match_id = db.Column(db.String(50), nullable=True)
     last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+    all_time_highest_score = db.Column(db.Float, default=0.0)  # Track all-time highest score
+    all_time_lowest_score = db.Column(db.Float, nullable=True)  # Track all-time lowest score
 
     # Relationship to Match model
     matches = db.relationship('Match', backref='player', lazy=True, cascade="all, delete-orphan")
@@ -25,9 +25,12 @@ class Player(db.Model):
         self.average_score = 0.0
         self.last_match_id = last_match_id
         self.last_updated = datetime.utcnow()
+        self.all_time_highest_score = 0.0
+        self.all_time_lowest_score = None
 
     def __repr__(self):
         return f'<Player {self.summoner_name}#{self.tagline}>'
+
 
 class Match(db.Model):
     __tablename__ = 'matches'

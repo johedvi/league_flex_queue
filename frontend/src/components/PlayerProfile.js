@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import './PlayerProfile.css'; // Optional: For styling purposes
-import { BACKEND_URL } from '../config'; // Ensure this is set
+import './PlayerProfile.css'; // Ensure this is linked
+import { BACKEND_URL } from '../config';
 
 function PlayerProfile() {
   const [leaderboardData, setLeaderboardData] = useState([]);
@@ -27,27 +27,50 @@ function PlayerProfile() {
     }
   };
 
+  const formatTime = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('en-GB'); // Format as DD/MM/YYYY
+  };
+
   if (loading) {
     return <div>Loading statistics...</div>;
   }
 
   return (
     <div className="player-profile">
-      <h2>(Snitt 10 senaste flex games)</h2>
+      <h2>Leaderboard - 10 latest flex</h2>
       <ul>
         {leaderboardData.map((player, index) => (
-          <li key={player.summoner_name}>
-            <strong>{index + 1}. {player.summoner_name}</strong>: {player.average_score.toFixed(2)} points
-            <div>
-              <span><strong>Last Updated:</strong> {new Date(player.last_updated).toLocaleString()}</span>
-            </div>
-            {player.tenth_game ? (
-              <div>
-                <span><strong>10th Game Score:</strong> {player.tenth_game.score} points</span>
+          <li key={player.summoner_name} className="player-item">
+            <div className="player-row">
+              <div className="player-header">
+                <span className="player-rank">{index + 1}.</span>
+                <span className="player-name">{player.summoner_name}:</span>
+                <span className="player-score">{player.average_score.toFixed(2)} points</span>
               </div>
-            ) : (
-              <div><em>10th game data not available</em></div>
-            )}
+              <div className="player-last-updated">
+                Last Updated: {formatDate(player.last_updated)} {formatTime(player.last_updated)}
+              </div>
+            </div>
+            <div className="player-stats">
+              <span className="player-stat player-highest-score">
+                <strong>Highest Score (All-time):</strong> {player.highest_score ? player.highest_score.toFixed(2) : 'N/A'}
+              </span>
+              <span className="player-stat player-lowest-score">
+                <strong>Lowest Score (All-time):</strong> {player.lowest_score ? player.lowest_score.toFixed(2) : 'N/A'}
+              </span>
+              <span className="player-stat player-tenth-game-score">
+                <strong>10th Game Score:</strong> {player.tenth_game_score ? player.tenth_game_score.toFixed(2) : 'N/A'}
+              </span>
+            </div>
           </li>
         ))}
       </ul>
