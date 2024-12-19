@@ -1,5 +1,3 @@
-// src/components/PlayerProfile.js
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './PlayerProfile.css'; // Optional: For styling purposes
@@ -38,8 +36,18 @@ function PlayerProfile() {
       <h2>(Snitt 10 senaste flex games)</h2>
       <ul>
         {leaderboardData.map((player, index) => (
-          <li key={player.puuid}>
-            {index + 1}. {player.summoner_name}: {player.average_score.toFixed(2)} points
+          <li key={player.summoner_name}>
+            <strong>{index + 1}. {player.summoner_name}</strong>: {player.average_score.toFixed(2)} points
+            <div>
+              <span><strong>Last Updated:</strong> {new Date(player.last_updated).toLocaleString()}</span>
+            </div>
+            {player.tenth_game ? (
+              <div>
+                <span><strong>10th Game Score:</strong> {player.tenth_game.score} points</span>
+              </div>
+            ) : (
+              <div><em>10th game data not available</em></div>
+            )}
           </li>
         ))}
       </ul>

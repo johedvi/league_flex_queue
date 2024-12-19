@@ -236,6 +236,7 @@ def get_leaderboard():
     else:
         return jsonify({'error': 'Unable to retrieve leaderboard data.'}), 500
 
+
 def update_leaderboard():
     """
     Updates the leaderboard by checking for new matches for each player.
@@ -302,7 +303,7 @@ def update_leaderboard():
                 continue
 
             # Limit the number of new matches to process (e.g., max 5)
-            new_match_ids = new_match_ids[:10] # Change if API requests grow too large
+            new_match_ids = new_match_ids[:10]  # Change if API requests grow too large
 
             # Process new matches
             for match_id in new_match_ids:
@@ -341,7 +342,7 @@ def update_leaderboard():
                 # Introduce delay between API calls to respect rate limits
                 time.sleep(1.2)
 
-            # Commit new matches to the database    
+            # Commit new matches to the database
             db.session.commit()
 
             # Update player's last_match_id
@@ -373,17 +374,35 @@ def update_leaderboard():
 
         # Update the cached leaderboard data
         leaderboard_entries = Player.query.order_by(Player.average_score.desc()).limit(100).all()
-        leaderboard_data = [
-            {
+        leaderboard_data = []
+        for entry in leaderboard_entries:
+            # Fetch the 10th most recent match (or oldest match in the top 10)
+            matches = sorted(entry.matches, key=lambda m: m.timestamp, reverse=True)
+            if len(matches) >= 10:
+                tenth_game = matches[-1]  # The 10th game (oldest among the top 10)
+                tenth_game_data = {
+                    'match_id': tenth_game.match_id,
+                    'score': tenth_game.score,
+                    'kills': tenth_game.kills,
+                    'deaths': tenth_game.deaths,
+                    'assists': tenth_game.assists,
+                    'cs': tenth_game.cs,
+                    'timestamp': tenth_game.timestamp.isoformat()
+                }
+            else:
+                tenth_game_data = None  # If fewer than 10 games exist
+
+            leaderboard_data.append({
                 'summoner_name': entry.summoner_name,
                 'tagline': entry.tagline,
                 'average_score': entry.average_score,
-                'last_updated': entry.last_updated.isoformat()
-            }
-            for entry in leaderboard_entries
-        ]
+                'last_updated': entry.last_updated.isoformat(),
+                'tenth_game': tenth_game_data  # Include 10th game data
+            })
+
         cache.set('leaderboard_data', leaderboard_data, timeout=300)
         logging.info("Leaderboard data updated and cached.")
+
 
 
 
