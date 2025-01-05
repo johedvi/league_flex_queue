@@ -8,6 +8,7 @@ import WheelSection from './components/WheelSection';
 import PlayerProfile from './components/PlayerProfile';
 import StatsSection from './components/StatsSection';
 import GraphSection from './components/GraphSection';
+import AttendanceSection from './components/AttendanceSection';
 import { QueueProvider } from './contexts/QueueContext';
 import './App.css';
 
@@ -42,6 +43,7 @@ function App() {
             />
             <Route path="/stats" element={<StatsSection />} />
             <Route path="/graphs" element={<GraphSection/>} />
+            <Route path="/attendance" element={<AttendanceSection/>} />
 
           </Routes>
         </div>

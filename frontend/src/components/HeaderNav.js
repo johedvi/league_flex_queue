@@ -8,6 +8,7 @@ function HeaderNav() {
         <Link to="/">Main</Link>
         <Link to="/stats">Stats</Link>
         <Link to="/graphs">Graph</Link>
+        <Link to="/attendance">Attendance</Link>
       </nav>
     </div>
   );
