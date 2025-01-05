@@ -4,45 +4,68 @@ import LineChart from "./LineChart";
 import './GraphSection.css'; // Optional: For styling purposes
 
 const GraphSection = () => {
+  // 1) Keep the raw player scores here once fetched
+  const [allPlayerScores, setAllPlayerScores] = useState({});
+  // 2) Build the chart data separately
   const [chartData, setChartData] = useState(null);
 
+  // 3) This state tracks which players are selected
+  const [selectedPlayers, setSelectedPlayers] = useState([]);
+
+  // Fetch data ONCE
   useEffect(() => {
-    // Fetch data from the API endpoint
     fetch("https://api.blackultras.com/api/scores")
       .then((response) => response.json())
       .then((data) => {
-        // Process the fetched data to prepare the chart
-        const playerScores = data.player_scores; // This is the data from your API
-
-        const labels = Array.from({ length: 10 }, (_, i) => `Game ${i + 1}`); // X-axis: 1 to 10
-        const datasets = []; // To store player-specific score datasets
-
-        Object.entries(playerScores).forEach(([playerName, games]) => {
-          // Create a dataset for each player
-          datasets.push({
-            label: playerName, // Player's name
-            data: games, // Player's scores
-            borderColor: `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 1)`,
-            backgroundColor: "rgba(0, 0, 0, 0)", // Transparent background
-            borderWidth: 2
-          });
-        });
-
-        // Prepare the chart data
-        const chartData = {
-          labels, // X-axis labels (1 to 10 for game numbers)
-          datasets // Y-axis datasets (scores for each player)
-        };
-
-        setChartData(chartData);
+        // `data.player_scores` is presumably an object: { playerName: [scores...] }
+        setAllPlayerScores(data.player_scores);
       })
       .catch((err) => console.error("Failed to fetch data:", err));
-  }, []); // Empty dependency array to ensure the effect runs only once on component mount
+  }, []);
+
+  // Whenever `allPlayerScores` or `selectedPlayers` changes, build fresh chartData
+  useEffect(() => {
+    if (!allPlayerScores || Object.keys(allPlayerScores).length === 0) {
+      return;
+    }
+
+    // For x-axis labels "Game 1" through "Game 10"
+    const labels = Array.from({ length: 10 }, (_, i) => `Game ${i + 1}`);
+
+    // Build the datasets array
+    const datasets = Object.entries(allPlayerScores).map(([playerName, scores]) => {
+      const isSelected = selectedPlayers.includes(playerName);
+      return {
+        label: playerName,
+        data: scores,
+        borderColor: isSelected ? 'rgba(255,99,132,1)' : 'rgba(169,169,169,1)',
+        backgroundColor: 'rgba(0, 0, 0, 0)',
+        borderWidth: isSelected ? 3 : 1,
+        fill: false,
+      };
+    });
+
+    setChartData({
+      labels,
+      datasets
+    });
+  }, [allPlayerScores, selectedPlayers]);
+
+  // Toggle player selection
+  const handlePlayerSelection = (playerName) => {
+    setSelectedPlayers((prevSelectedPlayers) =>
+      prevSelectedPlayers.includes(playerName)
+        ? prevSelectedPlayers.filter((name) => name !== playerName)
+        : [...prevSelectedPlayers, playerName]
+    );
+  };
 
   if (!chartData) return <div>Loading chart...</div>;
 
+  // 4) We can safely map over chartData.datasets to create buttons
   return (
     <div className="graph-section">
+
       <LineChart chartData={chartData} />
     </div>
   );
