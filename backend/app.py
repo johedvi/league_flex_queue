@@ -479,7 +479,7 @@ def get_scores():
         for player in players:
             # Query the last 10 games for each player, ordered by match date (desc)
             scores_query = db.session.query(Match.score).filter(Match.player_id == player.id) \
-                .order_by(Match.timestamp.desc()).limit(10).all()
+                .order_by(Match.timestamp.asc()).limit(10).all()
             
             # Extract scores and add them to the results dictionary
             results[player.summoner_name] = [score[0] for score in scores_query]
