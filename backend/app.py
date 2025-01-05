@@ -470,30 +470,32 @@ def get_stats():
 
 @app.route('/api/scores', methods=['GET'])
 def get_scores():
-    # Query the last 10 games for each player, ordered by match date (desc)
-    scores_query = db.session.query(
-        Player.summoner_name,
-        Match.score
-    ).join(
-        Match, Match.player_id == Player.id
-    ).order_by(
-        Match.player_id, Match.match_date.desc()
-    ).limit(10).all()
+    try:
+        # Fetch all players
+        players = Player.query.all()
+        
+        results = {}
 
-    # Format the results to only include scores
-    results = {}
-    for row in scores_query:
-        summoner_name = row[0]
-        if summoner_name not in results:
-            results[summoner_name] = []
-        results[summoner_name].append(row[1])  # Only append the score
+        for player in players:
+            # Query the last 10 games for each player, ordered by match date (desc)
+            scores_query = db.session.query(Match.score).filter(Match.player_id == player.id) \
+                .order_by(Match.timestamp.desc()).limit(10).all()
+            
+            # Extract scores and add them to the results dictionary
+            results[player.summoner_name] = [score[0] for score in scores_query]
 
-    # Prepare the response
-    response = {
-        "player_scores": results
-    }
+        # Prepare the response
+        response = {
+            "player_scores": results
+        }
 
-    return jsonify(response), 200
+        return jsonify(response), 200
+
+    except Exception as e:
+        # Log the error for debugging
+        logging.error(f"Error in /api/scores: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
+
 
 
 # Define Socket.IO event handlers
