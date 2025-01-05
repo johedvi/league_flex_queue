@@ -468,6 +468,34 @@ def get_stats():
     return jsonify(response), 200
 
 
+@app.route('/api/scores', methods=['GET'])
+def get_scores():
+    # Query the last 10 games for each player, ordered by match date (desc)
+    scores_query = db.session.query(
+        Player.summoner_name,
+        Match.score
+    ).join(
+        Match, Match.player_id == Player.id
+    ).order_by(
+        Match.player_id, Match.match_date.desc()
+    ).limit(10).all()
+
+    # Format the results to only include scores
+    results = {}
+    for row in scores_query:
+        summoner_name = row[0]
+        if summoner_name not in results:
+            results[summoner_name] = []
+        results[summoner_name].append(row[1])  # Only append the score
+
+    # Prepare the response
+    response = {
+        "player_scores": results
+    }
+
+    return jsonify(response), 200
+
+
 # Define Socket.IO event handlers
 @socketio.on('connect')
 def handle_connect():

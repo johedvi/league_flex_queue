@@ -36,11 +36,11 @@
     z-index: 10; /* Ensure it appears above the wheel */
 }
 
-canvas {
+.wheel-section canvas {
     border-radius: 50%;
     background-color: #111; /* Matches the card background */
     display: block;
-    border: 2px solid #ff0000; /* Adds a red border to the wheel */
+    border: 2px solid #ff1111; /* Adds a red border to the wheel */
 }
 
 .nameInput {
