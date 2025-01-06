@@ -7,6 +7,15 @@ function PlayerProfile() {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const roleIcons = {
+    Top: '/toplane-removebg-preview.png',
+    Mid: '/midlane-removebg-preview.png',
+    Jungle: '/jungle-removebg-preview.png',
+    ADC: '/botlane-removebg-preview.png',
+    Support: '/support-removebg-preview.png',
+    Undefined: '',
+  };
+
   useEffect(() => {
     fetchLeaderboardData();
     const interval = setInterval(() => {
@@ -55,6 +64,14 @@ function PlayerProfile() {
                 <span className="player-rank">{index + 1}.</span>
                 <span className="player-name">{player.summoner_name}:</span>
                 <span className="player-score">{player.average_score.toFixed(2)} points</span>
+                <div className="player-avatar-container">
+                  <span className="player-avatar-text">Most played:</span>
+                  <img
+                    src={roleIcons[player.most_played_role] || roleIcons.Undefined}
+                    alt={`${player.most_played_role} icon`}
+                    className="player-role-icon"
+                  />
+                </div>
               </div>
               <div className="player-last-updated">
                 Last Updated: {formatDate(player.last_updated)} {formatTime(player.last_updated)}
@@ -62,13 +79,16 @@ function PlayerProfile() {
             </div>
             <div className="player-stats">
               <span className="player-stat player-highest-score">
-                <strong>Highest Score (All-time):</strong> {player.highest_score ? player.highest_score.toFixed(2) : 'N/A'}
+                <strong>Highest Score (All-time):</strong>{' '}
+                {player.highest_score ? player.highest_score.toFixed(2) : 'N/A'}
               </span>
               <span className="player-stat player-lowest-score">
-                <strong>Lowest Score (All-time):</strong> {player.lowest_score ? player.lowest_score.toFixed(2) : 'N/A'}
+                <strong>Lowest Score (All-time):</strong>{' '}
+                {player.lowest_score ? player.lowest_score.toFixed(2) : 'N/A'}
               </span>
               <span className="player-stat player-tenth-game-score">
-                <strong>10th Game Score:</strong> {player.tenth_game_score ? player.tenth_game_score.toFixed(2) : 'N/A'}
+                <strong>10th Game Score:</strong>{' '}
+                {player.tenth_game_score ? player.tenth_game_score.toFixed(2) : 'N/A'}
               </span>
             </div>
           </li>

@@ -43,6 +43,8 @@ class Match(db.Model):
     assists = db.Column(db.Integer, nullable=False)
     cs = db.Column(db.Integer, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
+    assigned_role = db.Column(db.String(20), default="Undefined") 
+
 
     __table_args__ = (db.UniqueConstraint('match_id', 'player_id', name='_match_player_uc'),)
 

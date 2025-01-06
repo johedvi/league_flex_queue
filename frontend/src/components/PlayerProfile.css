@@ -69,3 +69,28 @@ ul {
   display: block;
   color: #ffaa00; /* Yellow for stats */
 }
+
+.player-header {
+  display: flex; /* Align elements horizontally */
+  align-items: center; /* Vertically center items */
+  justify-content: space-between; /* Push content to the edges */
+}
+
+.player-avatar-container {
+  display: flex; /* Align text and image horizontally */
+  align-items: center; /* Vertically center text and image */
+  gap: 5px; /* Add space between text and image */
+  margin-left: auto; /* Push the container to the far-right corner */
+}
+
+.player-avatar-text {
+  font-size: 12px; /* Adjust text size */
+  color: #ccc; /* Light gray color for the text */
+}
+
+.player-avatar {
+  width: 20px; /* Adjust size as needed */
+  height: 20px;
+  border-radius: 50%; /* Make the image circular */
+  object-fit: cover; /* Crop image to fit */
+}

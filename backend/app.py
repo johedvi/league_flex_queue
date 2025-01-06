@@ -15,6 +15,8 @@ from flask_migrate import Migrate  # Import Flask-Migrate
 import logging
 from datetime import datetime
 from sqlalchemy import func
+from riot_api import assign_roles_by_team_position
+
 
 from riot_api import (
     get_summoner_info,
@@ -70,6 +72,9 @@ PREDEFINED_PLAYERS = [
     {'summoner_name': 'gurkch', 'tagline': 'EUNE'},
     {'summoner_name': 'Magipide', 'tagline': '6969'},
     {'summoner_name': 'Salvatore NELK', 'tagline': 'EUNE'},
+    {'summoner_name': 'Nordiccarries', 'tagline': 'EUNE'}
+
+
 
   
 
@@ -303,15 +308,15 @@ def update_leaderboard():
                     # Last match ID not found in the list; process all matches
                     new_match_ids = all_match_ids
             else:
-                # No last match ID; process up to 20 matches
+                # No last match ID; process up to 10 matches
                 new_match_ids = all_match_ids
 
             if not new_match_ids:
                 logging.info(f"No new matches to process for {summoner_name}#{tagline}")
                 continue
 
-            # Limit the number of new matches to process (e.g., max 5)
-            new_match_ids = new_match_ids[:10]  # Change if API requests grow too large
+            # Limit the number of new matches to process
+            new_match_ids = new_match_ids[:10]
 
             # Process new matches
             for match_id in new_match_ids:
@@ -324,35 +329,42 @@ def update_leaderboard():
                     logging.info(f"Skipping match {match_id} (non-Flex Ranked 5v5)")
                     continue
 
-                player_stats = get_player_stats_in_match(puuid, match_data)
-                if not player_stats:
-                    logging.info(f"Player stats not found in match {match_id}")
+                team_members = get_player_stats_in_match(puuid, match_data, team_only=True)
+                if not team_members:
+                    logging.info(f"Team members not found in match {match_id}")
                     continue
 
-                # Calculate score
-                scores = calculate_scores([player_stats], match_data)
-                score_data = scores[0]
-                match_score = score_data['score']
+                # Assign roles to team members
+                team_members = assign_roles_by_team_position(team_members)
 
-                # Update all-time highest and lowest scores
-                if match_score > player.all_time_highest_score:
-                    player.all_time_highest_score = match_score
+                for member in team_members:
+                    if member['puuid'] == puuid:
+                        assigned_role = member.get('assignedRole', 'Undefined')
 
-                if player.all_time_lowest_score is None or match_score < player.all_time_lowest_score:
-                    player.all_time_lowest_score = match_score
+                        # Calculate score for the match
+                        scores = calculate_scores([member], match_data)
+                        match_score = scores[0]['score']
 
-                # Create Match entry
-                match = Match(
-                    match_id=match_id,
-                    player_id=player.id,
-                    score=match_score,
-                    kills=player_stats.get('kills', 0),
-                    deaths=player_stats.get('deaths', 0),
-                    assists=player_stats.get('assists', 0),
-                    cs=player_stats.get('totalMinionsKilled', 0) + player_stats.get('neutralMinionsKilled', 0),
-                    timestamp=datetime.fromtimestamp(match_data['info']['gameEndTimestamp'] / 1000)
-                )
-                db.session.add(match)
+                        # Update all-time highest and lowest scores
+                        if match_score > player.all_time_highest_score:
+                            player.all_time_highest_score = match_score
+
+                        if player.all_time_lowest_score is None or match_score < player.all_time_lowest_score:
+                            player.all_time_lowest_score = match_score
+
+                        # Create Match entry
+                        match = Match(
+                            match_id=match_id,
+                            player_id=player.id,
+                            score=match_score,
+                            kills=member.get('kills', 0),
+                            deaths=member.get('deaths', 0),
+                            assists=member.get('assists', 0),
+                            cs=member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0),
+                            timestamp=datetime.fromtimestamp(match_data['info']['gameEndTimestamp'] / 1000),
+                            assigned_role=assigned_role
+                        )
+                        db.session.add(match)
 
                 # Introduce delay between API calls to respect rate limits
                 time.sleep(1.2)
@@ -379,10 +391,15 @@ def update_leaderboard():
 
             player.average_score = total_score / match_count if match_count > 0 else 0.0
             player.total_score = total_score
+
+            # Calculate most played role
+            most_played_role = calculate_most_played_role(player_matches)
+            player.most_played_role = most_played_role
+
             player.last_updated = datetime.utcnow()
             db.session.commit()
 
-            logging.info(f"Updated {summoner_name}#{tagline}: Average Score={player.average_score}")
+            logging.info(f"Updated {summoner_name}#{tagline}: Average Score={player.average_score}, Most Played Role={player.most_played_role}")
 
             # Introduce delay between players to respect rate limits
             time.sleep(1.2)
@@ -406,7 +423,8 @@ def update_leaderboard():
                 'last_updated': entry.last_updated.isoformat(),
                 'highest_score': entry.all_time_highest_score,
                 'lowest_score': entry.all_time_lowest_score,
-                'tenth_game_score': tenth_game_score
+                'tenth_game_score': tenth_game_score,
+                'most_played_role': entry.most_played_role
             })
 
         cache.set('leaderboard_data', leaderboard_data, timeout=300)
@@ -414,6 +432,19 @@ def update_leaderboard():
 
 
 
+def calculate_most_played_role(matches):
+    """
+    Calculate the most played role based on roles stored in match data.
+    """
+    role_counts = {"Top": 0, "Jungle": 0, "Mid": 0, "ADC": 0, "Support": 0, "Undefined": 0}
+    for match in matches:
+        role = match.assigned_role
+        if role in role_counts:
+            role_counts[role] += 1
+
+    # Find the role with the highest count
+    most_played_role = max(role_counts, key=role_counts.get)
+    return most_played_role
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
