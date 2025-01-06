@@ -13,6 +13,8 @@ class Player(db.Model):
     last_updated = db.Column(db.DateTime, default=datetime.utcnow)
     all_time_highest_score = db.Column(db.Float, default=0.0)  # Track all-time highest score
     all_time_lowest_score = db.Column(db.Float, nullable=True)  # Track all-time lowest score
+    most_played_role = db.Column(db.String(20), default="Undefined")
+
 
     # Relationship to Match model
     matches = db.relationship('Match', backref='player', lazy=True, cascade="all, delete-orphan")
@@ -27,6 +29,7 @@ class Player(db.Model):
         self.last_updated = datetime.utcnow()
         self.all_time_highest_score = 0.0
         self.all_time_lowest_score = None
+        self.most_played_role = None
 
     def __repr__(self):
         return f'<Player {self.summoner_name}#{self.tagline}>'

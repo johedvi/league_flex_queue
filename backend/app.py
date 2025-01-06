@@ -299,13 +299,13 @@ def update_leaderboard():
                 logging.info(f"No matches found for {summoner_name}#{tagline}")
                 continue
 
-            # Find new matches
+            # Determine new matches to process
             if player.last_match_id:
                 try:
                     last_match_index = all_match_ids.index(player.last_match_id)
                     new_match_ids = all_match_ids[:last_match_index]
                 except ValueError:
-                    # Last match ID not found in the list; process all matches
+                    # Last match ID not found; process all matches
                     new_match_ids = all_match_ids
             else:
                 # No last match ID; process up to 10 matches
@@ -315,7 +315,7 @@ def update_leaderboard():
                 logging.info(f"No new matches to process for {summoner_name}#{tagline}")
                 continue
 
-            # Limit the number of new matches to process
+            # Limit matches processed to avoid API rate issues
             new_match_ids = new_match_ids[:10]
 
             # Process new matches
@@ -340,6 +340,12 @@ def update_leaderboard():
                 for member in team_members:
                     if member['puuid'] == puuid:
                         assigned_role = member.get('assignedRole', 'Undefined')
+
+                        # Check if the match already exists
+                        existing_match = Match.query.filter_by(match_id=match_id, player_id=player.id).first()
+                        if existing_match:
+                            logging.info(f"Match {match_id} for player {player.summoner_name} already exists. Skipping.")
+                            continue
 
                         # Calculate score for the match
                         scores = calculate_scores([member], match_data)
@@ -366,7 +372,7 @@ def update_leaderboard():
                         )
                         db.session.add(match)
 
-                # Introduce delay between API calls to respect rate limits
+                # Respect rate limits
                 time.sleep(1.2)
 
             # Commit new matches to the database
@@ -393,7 +399,8 @@ def update_leaderboard():
             player.total_score = total_score
 
             # Calculate most played role
-            most_played_role = calculate_most_played_role(player_matches)
+            recent_matches = sorted(player_matches, key=lambda m: m.timestamp, reverse=True)[:10]
+            most_played_role = calculate_most_played_role(recent_matches)
             player.most_played_role = most_played_role
 
             player.last_updated = datetime.utcnow()
@@ -429,7 +436,6 @@ def update_leaderboard():
 
         cache.set('leaderboard_data', leaderboard_data, timeout=300)
         logging.info("Leaderboard data updated and cached.")
-
 
 
 def calculate_most_played_role(matches):
