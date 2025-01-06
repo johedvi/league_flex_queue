@@ -13,7 +13,7 @@ function PlayerProfile() {
     Jungle: '/jungle-removebg-preview.png',
     ADC: '/botlane-removebg-preview.png',
     Support: '/support-removebg-preview.png',
-    Undefined: '',
+    Undefined: '/question_mark.png',
   };
 
   useEffect(() => {
