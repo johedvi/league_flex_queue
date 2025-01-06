@@ -1,42 +1,52 @@
+/* GraphSection.css */
+
 /* Ensure the parent container (graph-section) takes up full height */
 .graph-section {
-    display: flex;
-    justify-content: center;    /* Center horizontally */
-    align-items: flex-start;    /* Align content at the top */
-    height: 100vh;              /* Take up full viewport height */
-    padding: 20px;              /* Add padding around the content */
-  }
-  
-  /* Fix canvas to avoid the circular issue caused by the WheelSection styles */
-  .chart-container {
-    position: relative;
-    width: 80%;                   /* Adjust width (or use a fixed width like 600px if needed) */
-    max-width: 900px;             /* Optional: Limit max width */
-    height: auto;                 /* Let the height adjust based on content */
-    background-color: #2b2b2b;    /* Dark background similar to WheelSection */
-    border-radius: 8px;           /* Optional: keep rounded corners for the chart */
-    padding: 20px;                /* Add padding inside the container */
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;       /* Stack the title and chart vertically */
-    justify-content: flex-start;  /* Align the content (title and chart) at the top */
-    align-items: center;          /* Center the content horizontally */
-  }
-  
-  /* Title styling to center it above the chart */
-  .chart-container h2 {
-    color: #ff0000;      /* Red color for the title */
-    font-size: 24px;     /* Adjust font size for the title */
-    margin-bottom: 20px; /* Add spacing between title and chart */
-    text-align: center;  /* Ensure the title is centered */
-    width: 100%;         /* Full width to center within the container */
-  }
-  
-  /* Specific canvas styling for the chart */
-  .chart-container canvas {
-    width: 100% !important;   /* Ensure full width of the container */
-    height: 100% !important;  /* Ensure the canvas takes full height of the container */
-    border-radius: 0 !important; /* Remove the circle border-radius */
-    background-color: #111 !important; /* Dark background for chart */
-  }
-  
+  display: flex;
+  flex-direction: column; /* stack buttons & chart vertically */
+  justify-content: flex-start;
+  align-items: center;
+  height: 100vh;
+  padding: 20px;
+  background-color: #1f1f1f; /* optional dark background */
+  box-sizing: border-box;
+}
+
+/* Container for the row/rows of buttons */
+.player-buttons {
+  display: flex;
+  flex-wrap: wrap;       /* wrap if many players */
+  margin-bottom: 20px;   /* space between buttons and chart */
+}
+
+/* Fix canvas to avoid the circular issue from other styles */
+.chart-container {
+  position: relative;
+  width: 80%;
+  max-width: 900px;
+  height: auto;
+  background-color: #2b2b2b;
+  border-radius: 8px;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Title styling inside the chart container */
+.chart-container h2 {
+  color: #ff0000;
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+  width: 100%;
+}
+
+/* The canvas area */
+.chart-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  background-color: #111 !important;
+  border-radius: 0 !important;
+}
