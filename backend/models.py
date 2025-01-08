@@ -47,11 +47,13 @@ class Match(db.Model):
     cs = db.Column(db.Integer, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
     assigned_role = db.Column(db.String(20), default="Undefined") 
+    opponent_lane_rank = db.Column(db.Integer, nullable=True)
+
 
 
     __table_args__ = (db.UniqueConstraint('match_id', 'player_id', name='_match_player_uc'),)
 
-    def __init__(self, match_id, player_id, score, kills, deaths, assists, cs, timestamp, assigned_role):
+    def __init__(self, match_id, player_id, score, kills, deaths, assists, cs, timestamp, assigned_role, opponent_lane_rank):
         self.match_id = match_id
         self.player_id = player_id
         self.score = score
@@ -61,6 +63,7 @@ class Match(db.Model):
         self.cs = cs
         self.timestamp = timestamp
         self.assigned_role = assigned_role
+        self.opponent_lane_rank = opponent_lane_rank
 
 
     def __repr__(self):
