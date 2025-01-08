@@ -49,6 +49,21 @@ function PlayerProfile() {
     return date.toLocaleDateString('en-GB'); // Format as DD/MM/YYYY
   };
 
+  // Reverse mapping function to display rank text from numeric value
+  const formatRank = (numericRank) => {
+    const rankInt = Math.round(numericRank);  
+    const tierIndex = Math.floor((rankInt - 1) / 4) + 1;
+    const divisionVal = 4 - ((rankInt - 1) % 4);
+    const tierNames = {
+      1: "Iron", 2: "Bronze", 3: "Silver", 4: "Gold",
+      5: "Platinum", 6: "Diamond", 7: "Master", 8: "Grandmaster", 9: "Challenger"
+    };
+    const divisionNames = {4:"I", 3:"II", 2:"III", 1:"IV"};
+    const tierName = tierNames[tierIndex] || "Unknown";
+    const divisionName = divisionNames[divisionVal] || "";
+    return `${tierName} ${divisionName}`;
+  };
+
   if (loading) {
     return <div>Loading statistics...</div>;
   }
@@ -63,7 +78,9 @@ function PlayerProfile() {
               <div className="player-header">
                 <span className="player-rank">{index + 1}.</span>
                 <span className="player-name">{player.summoner_name}:</span>
-                <span className="player-score">{player.average_score.toFixed(2)} points</span>
+                <span className="player-score">
+                  {player.average_score.toFixed(2)} points
+                </span>
                 <div className="player-avatar-container">
                   <span className="player-avatar-text">Most played:</span>
                   <img
@@ -71,11 +88,11 @@ function PlayerProfile() {
                     alt={`${player.most_played_role} icon`}
                     className="player-avatar"
                   />
-
                 </div>
               </div>
               <div className="player-last-updated">
-                Last Updated: {formatDate(player.last_updated)} {formatTime(player.last_updated)}
+                Last Updated: {formatDate(player.last_updated)}{' '}
+                {formatTime(player.last_updated)}
               </div>
             </div>
             <div className="player-stats">
@@ -90,6 +107,12 @@ function PlayerProfile() {
               <span className="player-stat player-tenth-game-score">
                 <strong>10th Game Score:</strong>{' '}
                 {player.tenth_game_score ? player.tenth_game_score.toFixed(2) : 'N/A'}
+              </span>
+              <span className="player-stat player-average-opponent-rank">
+                <strong>Avg Opponent Rank:</strong>{' '}
+                {player.average_opponent_rank !== null
+                  ? `${formatRank(player.average_opponent_rank)} (${player.average_opponent_rank.toFixed(2)})`
+                  : 'N/A'}
               </span>
             </div>
           </li>

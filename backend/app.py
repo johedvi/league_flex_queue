@@ -464,6 +464,15 @@ def update_leaderboard():
             else:
                 tenth_game_score = None
 
+            # Compute average opponent rank over the last 10 matches
+            last_10_matches = matches[:10]
+            valid_ranks = [m.opponent_lane_rank for m in last_10_matches if m.opponent_lane_rank is not None]
+            if valid_ranks:
+                avg_opponent_rank = sum(valid_ranks) / len(valid_ranks)
+            else:
+                avg_opponent_rank = None
+
+
             leaderboard_data.append({
                 'summoner_name': entry.summoner_name,
                 'tagline': entry.tagline,
@@ -472,7 +481,8 @@ def update_leaderboard():
                 'highest_score': entry.all_time_highest_score,
                 'lowest_score': entry.all_time_lowest_score,
                 'tenth_game_score': tenth_game_score,
-                'most_played_role': entry.most_played_role
+                'most_played_role': entry.most_played_role,
+                'average_opponent_rank': avg_opponent_rank
             })
 
         cache.set('leaderboard_data', leaderboard_data, timeout=300)
