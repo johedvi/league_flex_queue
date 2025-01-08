@@ -79,18 +79,29 @@ ul {
 .player-avatar-container {
   display: flex; /* Align text and image horizontally */
   align-items: center; /* Vertically center text and image */
-  gap: 5px; /* Add space between text and image */
+  gap: 8px; /* Add space between elements (adjust as needed) */
   margin-left: auto; /* Push the container to the far-right corner */
+
 }
 
 .player-avatar-text {
-  font-size: 12px; /* Adjust text size */
-  color: #ccc; /* Light gray color for the text */
+  font-size: 12px; /* Text size */
+  color: #ccc; /* Light gray color */
+  line-height: 1; /* Ensure text aligns with the icon */
+  margin-right: 5px; /* Adjust spacing between text and icon */
 }
 
 .player-avatar {
-  width: 20px; /* Adjust size as needed */
+  width: 20px; /* Size of the icon */
   height: 20px;
   border-radius: 50%; /* Make the image circular */
   object-fit: cover; /* Crop image to fit */
+}
+
+.player-average-opponent-rank {
+  font-size: 12px; /* Same size as other text */
+  color: #ccc; /* Light gray color */
+  margin-right: 5px; /* Space between "Avg Lane Rank" and "Most Played" */
+  line-height: 1; /* Align with other text and image */
+  font-weight: normal; /* Consistent weight */
 }

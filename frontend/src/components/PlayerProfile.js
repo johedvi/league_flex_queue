@@ -75,21 +75,26 @@ function PlayerProfile() {
         {leaderboardData.map((player, index) => (
           <li key={player.summoner_name} className="player-item">
             <div className="player-row">
-              <div className="player-header">
-                <span className="player-rank">{index + 1}.</span>
-                <span className="player-name">{player.summoner_name}:</span>
-                <span className="player-score">
-                  {player.average_score.toFixed(2)} points
-                </span>
-                <div className="player-avatar-container">
-                  <span className="player-avatar-text">Most played:</span>
-                  <img
-                    src={roleIcons[player.most_played_role] || roleIcons.Undefined}
-                    alt={`${player.most_played_role} icon`}
-                    className="player-avatar"
-                  />
-                </div>
-              </div>
+            <div className="player-header">
+              <span className="player-rank">{index + 1}.</span>
+              <span className="player-name">{player.summoner_name}:</span>
+              <span className="player-score">
+                {player.average_score.toFixed(2)} points
+              </span>
+            <div className="player-avatar-container">
+            <span className="player-average-opponent-rank">
+            <strong>Avg Lane Rank:</strong>{' '}
+                {player.average_opponent_rank !== null
+              ? `${formatRank(player.average_opponent_rank)}`: 'N/A'}
+    </span>
+    <span className="player-avatar-text">Most played:</span>
+    <img
+      src={roleIcons[player.most_played_role] || roleIcons.Undefined}
+      alt={`${player.most_played_role} icon`}
+      className="player-avatar"
+    />
+  </div>
+</div>
               <div className="player-last-updated">
                 Last Updated: {formatDate(player.last_updated)}{' '}
                 {formatTime(player.last_updated)}
@@ -107,12 +112,6 @@ function PlayerProfile() {
               <span className="player-stat player-tenth-game-score">
                 <strong>10th Game Score:</strong>{' '}
                 {player.tenth_game_score ? player.tenth_game_score.toFixed(2) : 'N/A'}
-              </span>
-              <span className="player-stat player-average-opponent-rank">
-                <strong>Avg Opponent Rank:</strong>{' '}
-                {player.average_opponent_rank !== null
-                  ? `${formatRank(player.average_opponent_rank)} (${player.average_opponent_rank.toFixed(2)})`
-                  : 'N/A'}
               </span>
             </div>
           </li>
