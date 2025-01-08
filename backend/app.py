@@ -385,9 +385,9 @@ def update_leaderboard():
                             logging.debug(f"[LB] Found lane_opponent PUUID={opp_puuid}")
                             if opp_puuid:
                                 # Option A: Using your new Account-V1 approach
-                                opp_summ_id = get_summoner_id_by_puuid(opp_puuid, region=settings.Config.DEFAULT_REGION)
+                                opp_summ_id = get_summoner_id_by_puuid(opp_puuid, region=settings.Config.DEFAULT_REGION_CODE)
                                 if opp_summ_id:
-                                    rank_num = fetch_flex_then_solo_rank_numeric(opp_summ_id, region=settings.Config.DEFAULT_REGION)
+                                    rank_num = fetch_flex_then_solo_rank_numeric(opp_summ_id, region=settings.Config.DEFAULT_REGION_CODE)
                                     if rank_num is not None:
                                         opponent_lane_rank = rank_num
                                     else:
