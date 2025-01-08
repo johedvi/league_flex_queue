@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Header from './components/Header';          // Your existing header/title component
-import HeaderNav from './components/HeaderNav';    // The new navigation header
+import Header from './components/Header';
+import HeaderNav from './components/HeaderNav';
 import QueueSection from './components/QueueSection';
 import SearchSection from './components/SearchSection';
 import WheelSection from './components/WheelSection';
@@ -13,15 +13,34 @@ import { QueueProvider } from './contexts/QueueContext';
 import './App.css';
 
 function App() {
+  useEffect(() => {
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (e) {
+      console.error('Adsense error', e);
+    }
+  }, []);
+
   return (
     <QueueProvider>
       <Router>
         <div className="App">
           <Header />
-          <HeaderNav /> {/* The newly styled header with buttons/links */}
+          <HeaderNav />
+          {/* Ad Unit at the top */}
+          <div className="ad-container">
+            <ins
+              className="adsbygoogle"
+              style={{ display: 'block' }}
+              data-ad-client="ca-pub-2416565727603168"
+              data-ad-slot="1234567890" /* Replace with your Ad Slot ID */
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+            ></ins>
+          </div>
           <Routes>
-            <Route 
-              path="/" 
+            <Route
+              path="/"
               element={
                 <div className="container">
                   <div className="grid-container">
@@ -42,9 +61,8 @@ function App() {
               }
             />
             <Route path="/stats" element={<StatsSection />} />
-            <Route path="/graphs" element={<GraphSection/>} />
-            <Route path="/attendance" element={<AttendanceSection/>} />
-
+            <Route path="/graphs" element={<GraphSection />} />
+            <Route path="/attendance" element={<AttendanceSection />} />
           </Routes>
         </div>
       </Router>
