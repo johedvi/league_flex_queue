@@ -261,47 +261,48 @@ def update_leaderboard():
             summoner_name = player_info['summoner_name']
             tagline = player_info['tagline']
 
-            # Fetch player from database or create if not exists
+            # 1) Fetch player from database or create if not exists
             player = Player.query.filter_by(summoner_name=summoner_name, tagline=tagline).first()
             if not player:
                 # Fetch player PUUID
                 player_data = get_summoner_info(summoner_name, tagline, region=settings.Config.DEFAULT_REGION)
                 if not player_data:
-                    logging.error(f"Player {summoner_name}#{tagline} not found.")
-                    continue  # Skip to the next player
+                    logging.error(f"[LB] Player {summoner_name}#{tagline} not found via get_summoner_info.")
+                    continue
 
                 puuid = player_data.get('puuid')
                 if not puuid:
-                    logging.error(f"PUUID not found for player {summoner_name}#{tagline}.")
+                    logging.error(f"[LB] PUUID not found for {summoner_name}#{tagline}.")
                     continue
 
                 # Create new Player instance
                 player = Player(summoner_name=summoner_name, tagline=tagline, puuid=puuid)
                 db.session.add(player)
                 db.session.commit()
+                logging.info(f"[LB] Created new Player in DB: {player}")
             else:
                 puuid = player.puuid
 
-            # Fetch the latest match ID
+            # 2) Fetch the latest match ID from Match-V5
             match_ids = get_match_ids_by_summoner_puuid(puuid, count=1, region=settings.Config.DEFAULT_REGION)
             if not match_ids:
-                logging.info(f"No matches found for {summoner_name}#{tagline}")
+                logging.info(f"[LB] No matches found for {summoner_name}#{tagline}")
                 continue
 
             latest_match_id = match_ids[0]
+            logging.debug(f"[LB] Latest match for {summoner_name}#{tagline} => {latest_match_id}")
 
-            # Check if the latest match is already processed
+            # 3) Check if the latest match is already processed
             if player.last_match_id == latest_match_id:
-                logging.info(f"No new matches for {summoner_name}#{tagline}")
-                continue  # Skip to the next player
-
-            # Fetch new matches since the last processed match
-            all_match_ids = get_match_ids_by_summoner_puuid(puuid, start=0, count=10, region=settings.Config.DEFAULT_REGION)
-            if not all_match_ids:
-                logging.info(f"No matches found for {summoner_name}#{tagline}")
+                logging.info(f"[LB] No new matches for {summoner_name}#{tagline}")
                 continue
 
-            # Determine new matches to process
+            # 4) Fetch new matches since the last processed match
+            all_match_ids = get_match_ids_by_summoner_puuid(puuid, start=0, count=10, region=settings.Config.DEFAULT_REGION)
+            if not all_match_ids:
+                logging.info(f"[LB] No match IDs to process for {summoner_name}#{tagline}")
+                continue
+
             if player.last_match_id:
                 try:
                     last_match_index = all_match_ids.index(player.last_match_id)
@@ -310,88 +311,96 @@ def update_leaderboard():
                     # Last match ID not found; process all matches
                     new_match_ids = all_match_ids
             else:
-                # No last match ID; process up to 10 matches
                 new_match_ids = all_match_ids
 
             if not new_match_ids:
-                logging.info(f"No new matches to process for {summoner_name}#{tagline}")
+                logging.info(f"[LB] No new matches to process for {summoner_name}#{tagline}")
                 continue
 
-            # Limit matches processed to avoid API rate issues
+            # Limit matches processed
             new_match_ids = new_match_ids[:10]
 
-            # Process new matches
+            # 5) Process each new match
             for match_id in new_match_ids:
                 match_data = get_match_data(match_id, region=settings.Config.DEFAULT_REGION)
                 if not match_data:
+                    logging.warning(f"[LB] Could not retrieve match data for {match_id}")
                     continue
 
-                # Verify queue ID (e.g., Flex Ranked 5v5 is queueId 440)
-                if match_data.get('info', {}).get('queueId') != 440:
-                    logging.info(f"Skipping match {match_id} (non-Flex Ranked 5v5)")
+                queue_id = match_data.get('info', {}).get('queueId')
+                if queue_id != 440:
+                    logging.info(f"[LB] Skipping match {match_id} because queueId={queue_id} != 440 (Flex)")
                     continue
 
                 team_members = get_player_stats_in_match(puuid, match_data, team_only=True)
                 if not team_members:
-                    logging.info(f"Team members not found in match {match_id}")
+                    logging.warning(f"[LB] No team members found for match {match_id}")
                     continue
 
-                # Assign roles to team members
                 team_members = assign_roles_by_team_position(team_members)
 
+                # 6) Identify our tracked player's performance data
                 for member in team_members:
                     if member['puuid'] == puuid:
                         assigned_role = member.get('assignedRole', 'Undefined')
+                        logging.debug(f"[LB] Found player's assigned_role={assigned_role} in match={match_id}")
 
-                        # Check if the match already exists
                         existing_match = Match.query.filter_by(match_id=match_id, player_id=player.id).first()
                         if existing_match:
-                            logging.info(f"Match {match_id} for player {player.summoner_name} already exists. Skipping.")
+                            logging.info(f"[LB] Match {match_id} for {player.summoner_name} already exists; skipping.")
                             continue
 
-                        # Calculate score for the match
+                        # Calculate score
                         scores = calculate_scores([member], match_data)
                         match_score = scores[0]['score']
 
-                        # Update all-time highest and lowest scores
+                        # Update all-time highest/lowest
                         if match_score > player.all_time_highest_score:
                             player.all_time_highest_score = match_score
-
                         if player.all_time_lowest_score is None or match_score < player.all_time_lowest_score:
                             player.all_time_lowest_score = match_score
 
-                 
-                        all_participants = match_data['info']['participants']
+                        # 7) Find the lane opponent
+                        all_parts = match_data['info']['participants']
                         player_team_id = member.get('teamId', None)
-                        if player_team_id is not None:
-                            enemy_participants = [p for p in all_participants if p['teamId'] != player_team_id]
+                        if player_team_id is None:
+                            logging.warning(f"[LB] Missing teamId for {player.summoner_name}, skipping lane opponent logic.")
+                            lane_opponent = None
                         else:
-                            enemy_participants = []
+                            enemy_parts = [p for p in all_parts if p['teamId'] != player_team_id]
+                            lane_opponent = None
+                            logging.debug(f"[LB] Looking for lane_opponent matching role={assigned_role} among {len(enemy_parts)} enemies")
+                            for enemy in enemy_parts:
+                                # We re-run role assignment for the enemy to see their assigned role
+                                enemy_assigned_role = assign_roles_by_team_position([enemy])[0].get('assignedRole', 'Undefined')
+                                logging.debug(f"[LB] Enemy participant: teamPosition={enemy.get('teamPosition')} => assignedRole={enemy_assigned_role}")
+                                if enemy_assigned_role == assigned_role:
+                                    lane_opponent = enemy
+                                    break
 
-                        lane_opponent = None
-                        for enemy in enemy_participants:
-                            # Re-run role assignment or your own logic
-                            enemy_role_assigned = assign_roles_by_team_position([enemy])[0].get('assignedRole')
-                            if enemy_role_assigned == assigned_role:
-                                lane_opponent = enemy
-                                break
-
-                        # [NEW: Fetch numeric rank from lane_opponent]
+                        # 8) Fetch the lane opponent's rank
                         opponent_lane_rank = None
                         if lane_opponent:
                             opp_puuid = lane_opponent.get('puuid')
+                            logging.debug(f"[LB] Found lane_opponent PUUID={opp_puuid}")
                             if opp_puuid:
-                                # Convert PUUID -> Summoner ID
+                                # Option A: Using your new Account-V1 approach
                                 opp_summ_id = get_summoner_id_by_puuid(opp_puuid, region=settings.Config.DEFAULT_REGION)
                                 if opp_summ_id:
-                                    # Get rank from Flex or fallback SoloQ
-                                    opponent_lane_rank = fetch_flex_then_solo_rank_numeric(
-                                        opp_summ_id,
-                                        region=settings.Config.DEFAULT_REGION
-                                    )
+                                    rank_num = fetch_flex_then_solo_rank_numeric(opp_summ_id, region=settings.Config.DEFAULT_REGION)
+                                    if rank_num is not None:
+                                        opponent_lane_rank = rank_num
+                                    else:
+                                        logging.info(f"[LB] Opponent unranked or rank fetch failed for SummID={opp_summ_id}")
+                                else:
+                                    logging.info(f"[LB] Could not fetch SummID for opponent PUUID={opp_puuid}")
+                            else:
+                                logging.info("[LB] Opponent participant has no PUUID; skipping rank fetch.")
+                        else:
+                            logging.info(f"[LB] No lane opponent found for role={assigned_role} in match={match_id}")
 
-                        # Create Match entry
-                        match = Match(
+                        # 9) Create the Match entry
+                        match_obj = Match(
                             match_id=match_id,
                             player_id=player.id,
                             score=match_score,
@@ -402,17 +411,12 @@ def update_leaderboard():
                             timestamp=datetime.fromtimestamp(match_data['info']['gameEndTimestamp'] / 1000),
                             assigned_role=assigned_role,
                             opponent_lane_rank=opponent_lane_rank
-
                         )
+                        db.session.add(match_obj)
 
-    
+                time.sleep(1.2)  # optional rate-limit spacing
 
-                        db.session.add(match)
-
-                # Respect rate limits (if desired)
-                time.sleep(1.2)
-
-            # Commit new matches to the database
+            # 10) Commit new matches
             db.session.commit()
 
             # Update player's last_match_id
@@ -425,17 +429,16 @@ def update_leaderboard():
                 for old_match in matches_to_delete:
                     db.session.delete(old_match)
                 db.session.commit()
-                logging.info(f"Deleted {len(matches_to_delete)} old matches for {summoner_name}#{tagline}")
+                logging.info(f"[LB] Deleted {len(matches_to_delete)} old matches for {summoner_name}#{tagline}")
 
-            # Recalculate total_score and average_score based on current matches
-            player_matches = player.matches  # Refresh after deletion
-            total_score = sum(match.score for match in player_matches)
-            match_count = len(player_matches)
-
-            player.average_score = total_score / match_count if match_count > 0 else 0.0
+            # Recalculate total/average score
+            player_matches = player.matches
+            total_score = sum(m.score for m in player_matches)
+            count_matches = len(player_matches)
+            player.average_score = total_score / count_matches if count_matches > 0 else 0.0
             player.total_score = total_score
 
-            # Calculate most played role (last 10 matches)
+            # Most played role over last 10
             recent_matches = sorted(player_matches, key=lambda m: m.timestamp, reverse=True)[:10]
             most_played_role = calculate_most_played_role(recent_matches)
             player.most_played_role = most_played_role
@@ -443,20 +446,19 @@ def update_leaderboard():
             player.last_updated = datetime.utcnow()
             db.session.commit()
 
-            logging.info(f"Updated {summoner_name}#{tagline}: "
-                         f"Average Score={player.average_score}, "
-                         f"Most Played Role={player.most_played_role}")
+            logging.info(f"[LB] Updated {summoner_name}#{tagline}: "
+                         f"Avg={player.average_score:.2f}, "
+                         f"MostPlayedRole={player.most_played_role}, "
+                         f"LastMatchID={player.last_match_id}")
 
-            # Introduce delay between players to respect rate limits
-            time.sleep(1.2)
+            time.sleep(1.2)  # optional delay between players
 
-        # Update the cached leaderboard data
+        # 11) Update the cached leaderboard
         leaderboard_entries = Player.query.order_by(Player.average_score.desc()).limit(100).all()
         leaderboard_data = []
         for entry in leaderboard_entries:
             matches = sorted(entry.matches, key=lambda m: m.timestamp, reverse=True)
             if len(matches) >= 10:
-                # The 10th game is the oldest of the top 10
                 tenth_game = matches[-1]
                 tenth_game_score = tenth_game.score
             else:
@@ -474,7 +476,8 @@ def update_leaderboard():
             })
 
         cache.set('leaderboard_data', leaderboard_data, timeout=300)
-        logging.info("Leaderboard data updated and cached.")
+        logging.info("[LB] Leaderboard data updated and cached.")
+
 
 
 
