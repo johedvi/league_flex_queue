@@ -16,6 +16,8 @@ import logging
 from datetime import datetime
 from sqlalchemy import func
 from riot_api import assign_roles_by_team_position
+from rank_utils import get_summoner_id_by_puuid
+from rank_utils import fetch_flex_then_solo_rank_numeric
 
 
 from riot_api import (
@@ -358,6 +360,36 @@ def update_leaderboard():
                         if player.all_time_lowest_score is None or match_score < player.all_time_lowest_score:
                             player.all_time_lowest_score = match_score
 
+                 
+                        all_participants = match_data['info']['participants']
+                        player_team_id = member.get('teamId', None)
+                        if player_team_id is not None:
+                            enemy_participants = [p for p in all_participants if p['teamId'] != player_team_id]
+                        else:
+                            enemy_participants = []
+
+                        lane_opponent = None
+                        for enemy in enemy_participants:
+                            # Re-run role assignment or your own logic
+                            enemy_role_assigned = assign_roles_by_team_position([enemy])[0].get('assignedRole')
+                            if enemy_role_assigned == assigned_role:
+                                lane_opponent = enemy
+                                break
+
+                        # [NEW: Fetch numeric rank from lane_opponent]
+                        opponent_lane_rank = None
+                        if lane_opponent:
+                            opp_puuid = lane_opponent.get('puuid')
+                            if opp_puuid:
+                                # Convert PUUID -> Summoner ID
+                                opp_summ_id = get_summoner_id_by_puuid(opp_puuid, region=settings.Config.DEFAULT_REGION)
+                                if opp_summ_id:
+                                    # Get rank from Flex or fallback SoloQ
+                                    opponent_lane_rank = fetch_flex_then_solo_rank_numeric(
+                                        opp_summ_id,
+                                        region=settings.Config.DEFAULT_REGION
+                                    )
+
                         # Create Match entry
                         match = Match(
                             match_id=match_id,
@@ -369,10 +401,15 @@ def update_leaderboard():
                             cs=member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0),
                             timestamp=datetime.fromtimestamp(match_data['info']['gameEndTimestamp'] / 1000),
                             assigned_role=assigned_role
+
                         )
+
+                        
+                        match.opponent_lane_rank = opponent_lane_rank
+
                         db.session.add(match)
 
-                # Respect rate limits
+                # Respect rate limits (if desired)
                 time.sleep(1.2)
 
             # Commit new matches to the database
@@ -391,14 +428,14 @@ def update_leaderboard():
                 logging.info(f"Deleted {len(matches_to_delete)} old matches for {summoner_name}#{tagline}")
 
             # Recalculate total_score and average_score based on current matches
-            player_matches = player.matches  # Fetch updated matches after deletion
+            player_matches = player.matches  # Refresh after deletion
             total_score = sum(match.score for match in player_matches)
             match_count = len(player_matches)
 
             player.average_score = total_score / match_count if match_count > 0 else 0.0
             player.total_score = total_score
 
-            # Calculate most played role
+            # Calculate most played role (last 10 matches)
             recent_matches = sorted(player_matches, key=lambda m: m.timestamp, reverse=True)[:10]
             most_played_role = calculate_most_played_role(recent_matches)
             player.most_played_role = most_played_role
@@ -406,7 +443,9 @@ def update_leaderboard():
             player.last_updated = datetime.utcnow()
             db.session.commit()
 
-            logging.info(f"Updated {summoner_name}#{tagline}: Average Score={player.average_score}, Most Played Role={player.most_played_role}")
+            logging.info(f"Updated {summoner_name}#{tagline}: "
+                         f"Average Score={player.average_score}, "
+                         f"Most Played Role={player.most_played_role}")
 
             # Introduce delay between players to respect rate limits
             time.sleep(1.2)
@@ -415,10 +454,10 @@ def update_leaderboard():
         leaderboard_entries = Player.query.order_by(Player.average_score.desc()).limit(100).all()
         leaderboard_data = []
         for entry in leaderboard_entries:
-            # Fetch the 10th most recent match (or oldest match in the top 10)
             matches = sorted(entry.matches, key=lambda m: m.timestamp, reverse=True)
             if len(matches) >= 10:
-                tenth_game = matches[-1]  # The 10th game (oldest among the top 10)
+                # The 10th game is the oldest of the top 10
+                tenth_game = matches[-1]
                 tenth_game_score = tenth_game.score
             else:
                 tenth_game_score = None
@@ -436,6 +475,7 @@ def update_leaderboard():
 
         cache.set('leaderboard_data', leaderboard_data, timeout=300)
         logging.info("Leaderboard data updated and cached.")
+
 
 
 def calculate_most_played_role(matches):

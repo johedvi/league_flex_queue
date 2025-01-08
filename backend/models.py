@@ -53,7 +53,7 @@ class Match(db.Model):
 
     __table_args__ = (db.UniqueConstraint('match_id', 'player_id', name='_match_player_uc'),)
 
-    def __init__(self, match_id, player_id, score, kills, deaths, assists, cs, timestamp, assigned_role, opponent_lane_rank):
+    def __init__(self, match_id, player_id, score, kills, deaths, assists, cs, timestamp, assigned_role, opponent_lane_rank = None):
         self.match_id = match_id
         self.player_id = player_id
         self.score = score
