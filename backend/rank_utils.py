@@ -20,10 +20,10 @@ TIER_VALUES = {
 }
 
 DIVISION_VALUES = {
-    "I": 4,
-    "II": 3,
-    "III": 2,
-    "IV": 1
+    "I": 1,
+    "II": 2,
+    "III": 3,
+    "IV": 4
 }
 
 def rank_to_numeric(tier, division):

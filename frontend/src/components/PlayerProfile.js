@@ -58,7 +58,7 @@ function PlayerProfile() {
       1: "Iron", 2: "Bronze", 3: "Silver", 4: "Gold",
       5: "Platinum", 6: "Diamond", 7: "Master", 8: "Grandmaster", 9: "Challenger"
     };
-    const divisionNames = {4:"I", 3:"II", 2:"III", 1:"IV"};
+    const divisionNames = {1:"I", 2:"II", 3:"III", 4:"IV"};
     const tierName = tierNames[tierIndex] || "Unknown";
     const divisionName = divisionNames[divisionVal] || "";
     return `${tierName} ${divisionName}`;
