@@ -40,7 +40,7 @@ def rank_to_numeric(tier, division):
     return numeric_rank
 
 
-def get_summoner_id_by_puuid(puuid, region=Config.DEFAULT_REGION):
+def get_summoner_id_by_puuid(puuid, region=Config.DEFAULT_REGION_CODE):
     """
     Summoner-V4 endpoint to convert from PUUID -> Summoner ID
     GET /lol/summoner/v4/summoners/by-puuid/{puuid}
@@ -53,7 +53,7 @@ def get_summoner_id_by_puuid(puuid, region=Config.DEFAULT_REGION):
     return data.get('id')  # This is the Summoner ID used for League-V4 rank calls
 
 
-def get_ranked_stats_by_summoner_id(summoner_id, region=Config.DEFAULT_REGION):
+def get_ranked_stats_by_summoner_id(summoner_id, region=Config.DEFAULT_REGION_CODE):
     """
     League-V4 endpoint to fetch rank data for a given Summoner ID
     GET /lol/league/v4/entries/by-summoner/{encryptedSummonerId}
