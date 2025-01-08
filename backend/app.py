@@ -377,6 +377,8 @@ def update_leaderboard():
                                 if enemy_assigned_role == assigned_role:
                                     lane_opponent = enemy
                                     break
+                        game_duration_seconds = match_data['info'].get('gameDuration', 0)
+                        game_duration_minutes = game_duration_seconds / 60.0
 
                         # 8) Fetch the lane opponent's rank
                         opponent_lane_rank = None
@@ -410,7 +412,9 @@ def update_leaderboard():
                             cs=member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0),
                             timestamp=datetime.fromtimestamp(match_data['info']['gameEndTimestamp'] / 1000),
                             assigned_role=assigned_role,
-                            opponent_lane_rank=opponent_lane_rank
+                            opponent_lane_rank=opponent_lane_rank,
+                            game_duration=game_duration_minutes  
+
                         )
                         db.session.add(match_obj)
 
@@ -528,11 +532,14 @@ def get_stats():
         .order_by(func.sum(Match.assists).desc()) \
         .all()
 
-    # Query for CS
-    cs_query = db.session.query(Player, func.sum(Match.cs).label('total_cs')) \
+    # Query for CS/min: Sum of CS divided by sum of game durations
+    cs_query = db.session.query(
+            Player,
+            (func.sum(Match.cs) / func.sum(Match.game_duration)).label('cs_per_min')
+        ) \
         .join(Match, Match.player_id == Player.id) \
         .group_by(Player.id) \
-        .order_by(func.sum(Match.cs).desc()) \
+        .order_by((func.sum(Match.cs) / func.sum(Match.game_duration)).desc()) \
         .all()
 
     # Helper function to format query results
@@ -552,7 +559,7 @@ def get_stats():
         'most_kills': format_results(kills_query, 'total_kills'),
         'most_deaths': format_results(deaths_query, 'total_deaths'),
         'most_assists': format_results(assists_query, 'total_assists'),
-        'most_cs': format_results(cs_query, 'total_cs')
+        'most_cs': format_results(cs_query, 'cs/min')
     }
 
     return jsonify(response), 200
