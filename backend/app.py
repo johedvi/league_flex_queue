@@ -400,12 +400,12 @@ def update_leaderboard():
                             assists=member.get('assists', 0),
                             cs=member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0),
                             timestamp=datetime.fromtimestamp(match_data['info']['gameEndTimestamp'] / 1000),
-                            assigned_role=assigned_role
+                            assigned_role=assigned_role,
+                            opponent_lane_rank=opponent_lane_rank
 
                         )
 
-                        
-                        match.opponent_lane_rank = opponent_lane_rank
+    
 
                         db.session.add(match)
 
