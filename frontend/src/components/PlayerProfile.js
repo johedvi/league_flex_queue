@@ -91,7 +91,7 @@ function PlayerProfile() {
     <img
       src={roleIcons[player.most_played_role] || roleIcons.Undefined}
       alt={`${player.most_played_role} icon`}
-      className="player-avatar"
+      className="player-avatar "
     />
   </div>
 </div>

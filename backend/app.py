@@ -559,7 +559,7 @@ def get_stats():
         'most_kills': format_results(kills_query, 'total_kills'),
         'most_deaths': format_results(deaths_query, 'total_deaths'),
         'most_assists': format_results(assists_query, 'total_assists'),
-        'most_cs': format_results(cs_query, 'cs/min')
+        'most_cs': format_results(cs_query, 'cs_per_min')
     }
 
     return jsonify(response), 200
