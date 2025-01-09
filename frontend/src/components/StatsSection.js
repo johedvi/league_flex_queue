@@ -65,18 +65,22 @@ const StatsSection = () => {
         </div>
 
         {/* Most CS */}
-        <div className="grid-item">
-          <div className="stats-section">
-            <h2>Most CS</h2>
-            <ol className="ranking-list">
-              {stats.most_cs.map((player, index) => (
-                <li className="ranking-item" key={index}>
-                  {player.summoner_name} - {player.value} CS
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
+<div className="grid-item">
+  <div className="stats-section">
+    <h2>Most CS/MIN</h2>
+    <ol className="ranking-list">
+      {stats.most_cs.map((player, index) => (
+        <li className="ranking-item" key={index}>
+          {player.summoner_name} -{" "}
+          {player.value !== null && !isNaN(player.value)
+            ? Number(player.value).toFixed(1)
+            : "N/A"}{" "}
+          CS
+        </li>
+      ))}
+    </ol>
+  </div>
+</div>
       </div>
     </div>
   );
