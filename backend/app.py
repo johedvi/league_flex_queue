@@ -74,7 +74,7 @@ PREDEFINED_PLAYERS = [
     {'summoner_name': 'gurkch', 'tagline': 'EUNE'},
     {'summoner_name': 'Magipide', 'tagline': '6969'},
     {'summoner_name': 'Salvatore NELK', 'tagline': 'EUNE'},
-    {'summoner_name': 'Nordiccarries', 'tagline': 'EUNE'}
+    {'summoner_name': 'Nordiccarries', 'tagline': 'EUNE'},
     {'summoner_name': 'zurb', 'tagline': 'EUNE'}
 
 
