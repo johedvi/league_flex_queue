@@ -503,7 +503,7 @@ def calculate_most_played_role(matches):
     most_played_role = max(role_counts, key=role_counts.get)
     return most_played_role
 
-@app.route('/api/clear-cache', methods=['POST'])
+@app.route('/api/clear-cache', methods=['GET'])
 def clear_cache():
     try:
         cache.clear()
