@@ -503,6 +503,14 @@ def calculate_most_played_role(matches):
     most_played_role = max(role_counts, key=role_counts.get)
     return most_played_role
 
+@app.route('/api/clear-cache', methods=['POST'])
+def clear_cache():
+    try:
+        cache.clear()
+        return jsonify({"message": "Cache cleared successfully!"}), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to clear cache: {str(e)}"}), 500
+
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
     # Query for kills, returning all players sorted by total kills desc
