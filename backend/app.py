@@ -375,8 +375,8 @@ def update_leaderboard():
                         game_duration_seconds = match_data['info'].get('gameDuration', 0)
                         game_duration_minutes = game_duration_seconds / 60.0
 
-                        # 8) Fetch the lane opponent's rank
-                        opponent_lane_rank = None
+                        
+                        """opponent_lane_rank = None
                         if lane_opponent:
                             opp_puuid = lane_opponent.get('puuid')
                             logging.debug(f"[LB] Found lane_opponent PUUID={opp_puuid}")
@@ -394,7 +394,7 @@ def update_leaderboard():
                             else:
                                 logging.info("[LB] Opponent participant has no PUUID; skipping rank fetch.")
                         else:
-                            logging.info(f"[LB] No lane opponent found for role={assigned_role} in match={match_id}")
+                            logging.info(f"[LB] No lane opponent found for role={assigned_role} in match={match_id}")"""
 
                         # 9) Create the Match entry
                         match_obj = Match(
@@ -407,7 +407,6 @@ def update_leaderboard():
                             cs=member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0),
                             timestamp=datetime.fromtimestamp(match_data['info']['gameEndTimestamp'] / 1000),
                             assigned_role=assigned_role,
-                            opponent_lane_rank=opponent_lane_rank,
                             game_duration=game_duration_minutes  
 
                         )
