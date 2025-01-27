@@ -240,6 +240,7 @@ def get_leaderboard():
     Retrieve the leaderboard data from the cache.
     """
     leaderboard_data = cache.get('leaderboard_data')
+    cache.delete('leaderboard_data')
     if leaderboard_data:
         return jsonify({'leaderboard': leaderboard_data}), 200
     else:
