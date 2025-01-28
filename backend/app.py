@@ -240,7 +240,6 @@ def get_leaderboard():
     Retrieve the leaderboard data from the cache.
     """
     leaderboard_data = cache.get('leaderboard_data')
-    
     if leaderboard_data:
         return jsonify({'leaderboard': leaderboard_data}), 200
     else:
@@ -375,8 +374,8 @@ def update_leaderboard():
                         game_duration_seconds = match_data['info'].get('gameDuration', 0)
                         game_duration_minutes = game_duration_seconds / 60.0
 
-                        
-                        """opponent_lane_rank = None
+                        # 8) Fetch the lane opponent's rank
+                        opponent_lane_rank = None
                         if lane_opponent:
                             opp_puuid = lane_opponent.get('puuid')
                             logging.debug(f"[LB] Found lane_opponent PUUID={opp_puuid}")
@@ -394,7 +393,7 @@ def update_leaderboard():
                             else:
                                 logging.info("[LB] Opponent participant has no PUUID; skipping rank fetch.")
                         else:
-                            logging.info(f"[LB] No lane opponent found for role={assigned_role} in match={match_id}")"""
+                            logging.info(f"[LB] No lane opponent found for role={assigned_role} in match={match_id}")
 
                         # 9) Create the Match entry
                         match_obj = Match(
@@ -407,6 +406,7 @@ def update_leaderboard():
                             cs=member.get('totalMinionsKilled', 0) + member.get('neutralMinionsKilled', 0),
                             timestamp=datetime.fromtimestamp(match_data['info']['gameEndTimestamp'] / 1000),
                             assigned_role=assigned_role,
+                            opponent_lane_rank=opponent_lane_rank,
                             game_duration=game_duration_minutes  
 
                         )
@@ -502,27 +502,6 @@ def calculate_most_played_role(matches):
     # Find the role with the highest count
     most_played_role = max(role_counts, key=role_counts.get)
     return most_played_role
-
-@app.route('/api/clear-cache', methods=['GET'])
-def clear_cache():
-    try:
-        cache.clear()
-        return jsonify({"message": "Cache cleared successfully!"}), 200
-    except Exception as e:
-        return jsonify({"error": f"Failed to clear cache: {str(e)}"}), 500
-    
-from sqlalchemy.sql import text
-
-@app.route('/api/debug-db', methods=['GET'])
-def debug_db():
-    try:
-        # Use `text` to wrap raw SQL queries
-        result = db.session.execute(text('SELECT 1')).fetchone()
-        return jsonify({"message": "Database connected successfully!", "result": result[0]}), 200
-    except Exception as e:
-        return jsonify({"error": f"Database connection failed: {str(e)}"}), 500
-
-
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():

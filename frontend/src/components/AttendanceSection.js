@@ -4,6 +4,8 @@ import { Bar } from 'react-chartjs-2';
 import Chart from 'chart.js/auto'; // Importing Chart.js
 import './AttendanceSection.css'; // Importing the CSS file
 
+
+
 const EventAttendanceHistogram = () => {
   const attendees = {
     '20-12-2024': [

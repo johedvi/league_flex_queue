@@ -392,3 +392,32 @@ def create_leaderboard(player_list, match_count=10, region=settings.Config.DEFAU
     # Sort the leaderboard by total score in descending order
     leaderboard.sort(key=lambda x: x['totalScore'], reverse=True)
     return leaderboard
+
+# Example usage:
+if __name__ == "__main__":
+    # List of player names and taglines to include in the leaderboard
+    """
+    Search for a player and calculate team scores.
+    """
+    summoner_name = 'bajveck'
+    summoner_tagline = 'EUNE'
+
+    # Fetch player PUUID
+    player_info = get_summoner_info(summoner_name, summoner_tagline, region=settings.Config.DEFAULT_REGION)
+
+    puuid = player_info.get('puuid')
+
+    # Fetch recent match ID
+    match_id = get_recent_match_id(puuid, region=settings.Config.DEFAULT_REGION)
+
+    # Fetch team members
+    match_data = get_match_data(match_id, region=settings.Config.DEFAULT_REGION)
+
+    team_members = get_player_stats_in_match(puuid, match_data, team_only=True)
+
+    # Calculate scores
+    scores = calculate_scores(team_members)
+
+    # Identify the player with the lowest score
+    scores_sorted = sorted(scores, key=lambda x: x['score'])
+    player_to_remove = scores_sorted[0] if scores_sorted else None
