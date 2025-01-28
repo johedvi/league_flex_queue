@@ -510,6 +510,15 @@ def clear_cache():
         return jsonify({"message": "Cache cleared successfully!"}), 200
     except Exception as e:
         return jsonify({"error": f"Failed to clear cache: {str(e)}"}), 500
+    
+@app.route('/api/debug-db', methods=['GET'])
+def debug_db():
+    try:
+        result = db.session.execute('SELECT 1').fetchone()
+        return jsonify({"message": "Database connected successfully!", "result": result}), 200
+    except Exception as e:
+        return jsonify({"error": f"Database connection failed: {str(e)}"}), 500
+
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
