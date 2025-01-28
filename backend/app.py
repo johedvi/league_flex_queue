@@ -511,13 +511,17 @@ def clear_cache():
     except Exception as e:
         return jsonify({"error": f"Failed to clear cache: {str(e)}"}), 500
     
+from sqlalchemy.sql import text
+
 @app.route('/api/debug-db', methods=['GET'])
 def debug_db():
     try:
-        result = db.session.execute('SELECT 1').fetchone()
-        return jsonify({"message": "Database connected successfully!", "result": result}), 200
+        # Use `text` to wrap raw SQL queries
+        result = db.session.execute(text('SELECT 1')).fetchone()
+        return jsonify({"message": "Database connected successfully!", "result": result[0]}), 200
     except Exception as e:
         return jsonify({"error": f"Database connection failed: {str(e)}"}), 500
+
 
 
 @app.route('/api/stats', methods=['GET'])
