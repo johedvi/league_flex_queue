@@ -1,7 +1,6 @@
 # League Flex Queue Tracker  
 *A tool to analyze and track League of Legends Flex Queue performance.*  
 
-![League Flex Queue Banner](https://your-image-link-here.com)  
 
 ## 🌍 Live Demo  
 🔗 **[Visit the Website Here](https://blackultras.com/)**  
